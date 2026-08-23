@@ -663,6 +663,8 @@ textarea#domainInput::placeholder {
   align-items: center;
   gap: 10px;
   overflow: hidden;
+  min-width: 0;
+  flex: 1;
 }
 
 .domain-name {
@@ -672,10 +674,8 @@ textarea#domainInput::placeholder {
   font-family: "SFMono-Regular", Consolas, monospace;
   user-select: text;
   white-space: nowrap;
-}
-
-.domain-name .tld-part {
-  color: #a5b4fc;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .domain-status-badge {
@@ -688,6 +688,7 @@ textarea#domainInput::placeholder {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  flex-shrink: 0;
 }
 
 .domain-status-badge.badge-available {
@@ -712,12 +713,166 @@ textarea#domainInput::placeholder {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .market-price {
   font-size: 11.5px;
   font-weight: 600;
   color: var(--color-aftermarket);
+}
+
+/* Continue Button with Dropdown Indicator */
+.btn-continue {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.btn-continue:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  box-shadow: 0 3px 10px rgba(16, 185, 129, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-continue:active {
+  transform: translateY(0);
+}
+
+.btn-continue.is-open {
+  background: #047857;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.4);
+}
+
+.btn-continue .chevron-icon {
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-continue.is-open .chevron-icon {
+  transform: rotate(180deg);
+}
+
+/* Floating Registrar Dropdown */
+.registrar-dropdown {
+  position: fixed;
+  background: #151d2f;
+  border: 1px solid #283754;
+  border-radius: 9px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  padding: 6px;
+  width: 175px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: dropdownFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(8px);
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.registrar-dropdown.opens-up {
+  animation: dropdownFadeInUp 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes dropdownFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dropdown-header {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  padding: 5px 8px 4px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  margin-bottom: 3px;
+}
+
+.dropdown-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 8px;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s, color 0.12s;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+  background: #22304d;
+  color: #ffffff;
+  outline: none;
+}
+
+.registrar-favicon {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.registrar-name {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.dropdown-arrow-icon {
+  color: var(--text-muted);
+  opacity: 0.6;
+  transition: opacity 0.15s, color 0.15s, transform 0.15s;
+  flex-shrink: 0;
+}
+
+.dropdown-item:hover .dropdown-arrow-icon {
+  opacity: 1;
+  color: var(--text-primary);
+  transform: translate(1px, -1px);
 }
 
 .btn-item-action {

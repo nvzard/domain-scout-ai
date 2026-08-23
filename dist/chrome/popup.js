@@ -50,6 +50,83 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnExport = document.getElementById('btnExport');
   const resultsList = document.getElementById('resultsList');
   const toastEl = document.getElementById('toast');
+  const registrarDropdown = document.getElementById('registrarDropdown');
+
+  let activeDropdownDomain = null;
+  let activeDropdownBtn = null;
+
+  // Registrar search / buy URL endpoints
+  const REGISTRAR_URLS = {
+    godaddy: (domain) => `https://www.godaddy.com/domainsearch/find?checkType=search&domainToCheck=${encodeURIComponent(domain)}`,
+    hostinger: (domain) => `https://www.hostinger.com/domain-name-search?domain=${encodeURIComponent(domain)}`,
+    spaceship: (domain) => `https://www.spaceship.com/domain-search/?query=${encodeURIComponent(domain)}`,
+    domaincom: (domain) => `https://www.domain.com/registration/?search=${encodeURIComponent(domain)}`,
+    namecheap: (domain) => `https://www.namecheap.com/domains/registration/results/?domain=${encodeURIComponent(domain)}`
+  };
+
+  // Cross-browser safe URL opener
+  function openExternalUrl(url) {
+    try {
+      if (typeof chrome !== 'undefined' && chrome.tabs && typeof chrome.tabs.create === 'function') {
+        chrome.tabs.create({ url });
+      } else if (typeof browser !== 'undefined' && browser.tabs && typeof browser.tabs.create === 'function') {
+        browser.tabs.create({ url });
+      } else {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+    } catch (e) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  }
+
+  function closeRegistrarDropdown() {
+    if (activeDropdownBtn) {
+      activeDropdownBtn.classList.remove('is-open');
+    }
+    activeDropdownBtn = null;
+    activeDropdownDomain = null;
+    if (registrarDropdown) {
+      registrarDropdown.classList.add('hidden');
+    }
+  }
+
+  function openRegistrarDropdown(btn, domain) {
+    if (activeDropdownBtn === btn && !registrarDropdown.classList.contains('hidden')) {
+      closeRegistrarDropdown();
+      return;
+    }
+
+    closeRegistrarDropdown();
+
+    activeDropdownBtn = btn;
+    activeDropdownDomain = domain;
+    btn.classList.add('is-open');
+
+    if (!registrarDropdown) return;
+
+    registrarDropdown.classList.remove('hidden');
+
+    const rect = btn.getBoundingClientRect();
+    const dropdownWidth = 175;
+    const dropdownHeight = 220;
+
+    let left = rect.right - dropdownWidth;
+    if (left < 8) left = 8;
+    if (left + dropdownWidth > window.innerWidth - 8) {
+      left = window.innerWidth - dropdownWidth - 8;
+    }
+
+    let top = rect.bottom + 4;
+    if (top + dropdownHeight > window.innerHeight - 8) {
+      top = rect.top - dropdownHeight - 4;
+      registrarDropdown.classList.add('opens-up');
+    } else {
+      registrarDropdown.classList.remove('opens-up');
+    }
+
+    registrarDropdown.style.top = `${top}px`;
+    registrarDropdown.style.left = `${left}px`;
+  }
 
   // Sample data
   const sampleDomains = [
@@ -361,6 +438,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Render List Items
+    closeRegistrarDropdown();
     resultsList.innerHTML = '';
 
     if (filtered.length === 0) {
@@ -392,12 +470,25 @@ document.addEventListener('DOMContentLoaded', () => {
       const baseName = item.name;
       const tld = item.tld;
 
+      let continueBtnHtml = '';
+      if (item.isAvailable) {
+        continueBtnHtml = `
+          <button class="btn-continue" data-domain="${escapeHtml(item.domain)}" title="Register ${escapeHtml(item.domain)}">
+            <span>Continue</span>
+            <svg class="chevron-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+        `;
+      }
+
       row.innerHTML = `
         <div class="domain-left">
           <span class="domain-name">${escapeHtml(baseName)}<span class="tld-part">.${escapeHtml(tld)}</span></span>
           ${badgeHtml}
         </div>
         <div class="domain-right">
+          ${continueBtnHtml}
           <button class="btn-item-action btn-copy-single" data-domain="${escapeHtml(item.domain)}" title="Copy ${escapeHtml(item.domain)}">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
@@ -448,8 +539,20 @@ document.addEventListener('DOMContentLoaded', () => {
     renderResults();
   });
 
-  // Single Domain Copy
+  // Results List Actions (Continue Dropdown & Single Domain Copy)
   resultsList.addEventListener('click', (e) => {
+    // 1. Continue dropdown trigger
+    const continueBtn = e.target.closest('.btn-continue');
+    if (continueBtn) {
+      e.stopPropagation();
+      const domain = continueBtn.getAttribute('data-domain');
+      if (domain) {
+        openRegistrarDropdown(continueBtn, domain);
+      }
+      return;
+    }
+
+    // 2. Single Domain Copy
     const copyBtn = e.target.closest('.btn-copy-single');
     if (copyBtn) {
       const domain = copyBtn.getAttribute('data-domain');
@@ -457,6 +560,46 @@ document.addEventListener('DOMContentLoaded', () => {
         copyToClipboard(domain);
         showToast(`Copied ${domain}`);
       }
+      return;
+    }
+  });
+
+  // Registrar Dropdown Item Selection
+  if (registrarDropdown) {
+    registrarDropdown.addEventListener('click', (e) => {
+      const item = e.target.closest('.dropdown-item');
+      if (item && activeDropdownDomain) {
+        const registrarKey = item.getAttribute('data-registrar');
+        const urlFn = REGISTRAR_URLS[registrarKey];
+        if (urlFn) {
+          const targetUrl = urlFn(activeDropdownDomain);
+          openExternalUrl(targetUrl);
+          closeRegistrarDropdown();
+        }
+      }
+    });
+  }
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (registrarDropdown && !registrarDropdown.classList.contains('hidden')) {
+      if (!registrarDropdown.contains(e.target) && !e.target.closest('.btn-continue')) {
+        closeRegistrarDropdown();
+      }
+    }
+  });
+
+  // Close dropdown on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeRegistrarDropdown();
+    }
+  });
+
+  // Close dropdown on scrolling results list
+  resultsList.addEventListener('scroll', () => {
+    if (registrarDropdown && !registrarDropdown.classList.contains('hidden')) {
+      closeRegistrarDropdown();
     }
   });
 
