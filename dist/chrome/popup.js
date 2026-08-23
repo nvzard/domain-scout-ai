@@ -300,16 +300,182 @@ document.addEventListener('DOMContentLoaded', () => {
     }, durationMs);
   }
 
+  // Safe SVG DOM Helper
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+
+  function createSvgEl(tagName, attrs = {}) {
+    const el = document.createElementNS(SVG_NS, tagName);
+    for (const [k, v] of Object.entries(attrs)) {
+      el.setAttribute(k, v);
+    }
+    return el;
+  }
+
+  function createStarBtn(domain, isStarred) {
+    const btn = document.createElement('button');
+    btn.className = `btn-star ${isStarred ? 'is-starred' : ''}`;
+    btn.setAttribute('data-domain', domain);
+    btn.title = isStarred ? 'Remove from starred' : 'Add to starred';
+
+    const svg = createSvgEl('svg', {
+      width: '13',
+      height: '13',
+      viewBox: '0 0 24 24',
+      fill: isStarred ? '#facc15' : 'none',
+      stroke: 'currentColor',
+      'stroke-width': '2',
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round'
+    });
+    const polygon = createSvgEl('polygon', {
+      points: '12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2'
+    });
+    svg.appendChild(polygon);
+    btn.appendChild(svg);
+    return btn;
+  }
+
+  function createContinueBtn(domain) {
+    const btn = document.createElement('button');
+    btn.className = 'btn-continue';
+    btn.setAttribute('data-domain', domain);
+    btn.title = `Register ${domain}`;
+
+    const span = document.createElement('span');
+    span.textContent = 'Continue';
+    btn.appendChild(span);
+
+    const svg = createSvgEl('svg', {
+      class: 'chevron-icon',
+      width: '10',
+      height: '10',
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: 'currentColor',
+      'stroke-width': '2.5',
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round'
+    });
+    const polyline = createSvgEl('polyline', { points: '6 9 12 15 18 9' });
+    svg.appendChild(polyline);
+    btn.appendChild(svg);
+    return btn;
+  }
+
+  function createAftermarketBtn(domain, market) {
+    const btn = document.createElement('button');
+    btn.className = 'btn-aftermarket-action';
+    btn.setAttribute('data-domain', domain);
+    btn.setAttribute('data-market', market);
+    btn.title = `View listing on ${market}`;
+
+    const span = document.createElement('span');
+    span.textContent = 'Buy / Offer';
+    btn.appendChild(span);
+
+    const svg = createSvgEl('svg', {
+      class: 'action-arrow',
+      width: '11',
+      height: '11',
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: 'currentColor',
+      'stroke-width': '2'
+    });
+    const path1 = createSvgEl('path', { d: 'M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6' });
+    const polyline = createSvgEl('polyline', { points: '15 3 21 3 21 9' });
+    const line = createSvgEl('line', { x1: '10', y1: '14', x2: '21', y2: '3' });
+    svg.appendChild(path1);
+    svg.appendChild(polyline);
+    svg.appendChild(line);
+    btn.appendChild(svg);
+    return btn;
+  }
+
+  function createWhoisBtn(domain) {
+    const btn = document.createElement('button');
+    btn.className = 'btn-item-action btn-whois';
+    btn.setAttribute('data-domain', domain);
+    btn.title = `WHOIS lookup for ${domain}`;
+
+    const svg = createSvgEl('svg', {
+      width: '12',
+      height: '12',
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: 'currentColor',
+      'stroke-width': '2'
+    });
+    const circle = createSvgEl('circle', { cx: '11', cy: '11', r: '8' });
+    const line = createSvgEl('line', { x1: '21', y1: '21', x2: '16.65', y2: '16.65' });
+    svg.appendChild(circle);
+    svg.appendChild(line);
+    btn.appendChild(svg);
+    return btn;
+  }
+
+  function createWaybackBtn(domain) {
+    const btn = document.createElement('button');
+    btn.className = 'btn-item-action btn-wayback';
+    btn.setAttribute('data-domain', domain);
+    btn.title = `Wayback Machine archive for ${domain}`;
+
+    const svg = createSvgEl('svg', {
+      width: '12',
+      height: '12',
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: 'currentColor',
+      'stroke-width': '2'
+    });
+    const circle = createSvgEl('circle', { cx: '12', cy: '12', r: '10' });
+    const polyline = createSvgEl('polyline', { points: '12 6 12 12 16 14' });
+    svg.appendChild(circle);
+    svg.appendChild(polyline);
+    btn.appendChild(svg);
+    return btn;
+  }
+
+  function createCopyBtn(domain) {
+    const btn = document.createElement('button');
+    btn.className = 'btn-item-action btn-copy-single';
+    btn.setAttribute('data-domain', domain);
+    btn.title = `Copy ${domain}`;
+
+    const svg = createSvgEl('svg', {
+      width: '12',
+      height: '12',
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: 'currentColor',
+      'stroke-width': '2'
+    });
+    const rect = createSvgEl('rect', { x: '9', y: '9', width: '13', height: '13', rx: '2', ry: '2' });
+    const path = createSvgEl('path', { d: 'M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1' });
+    svg.appendChild(rect);
+    svg.appendChild(path);
+    btn.appendChild(svg);
+    return btn;
+  }
+
   // Render TLD Chips
   function renderTldChips() {
-    tldChipsContainer.innerHTML = '';
+    tldChipsContainer.textContent = '';
     preferredTlds.forEach((tld, idx) => {
       const chip = document.createElement('div');
       chip.className = 'tld-chip';
-      chip.innerHTML = `
-        <span>.${escapeHtml(tld)}</span>
-        <span class="tld-remove" data-index="${idx}" title="Remove .${escapeHtml(tld)}">×</span>
-      `;
+
+      const tldText = document.createElement('span');
+      tldText.textContent = `.${tld}`;
+
+      const removeBtn = document.createElement('span');
+      removeBtn.className = 'tld-remove';
+      removeBtn.setAttribute('data-index', String(idx));
+      removeBtn.title = `Remove .${tld}`;
+      removeBtn.textContent = '×';
+
+      chip.appendChild(tldText);
+      chip.appendChild(removeBtn);
       tldChipsContainer.appendChild(chip);
     });
   }
@@ -516,7 +682,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Render List Items
     closeRegistrarDropdown();
-    resultsList.innerHTML = '';
+    resultsList.textContent = '';
 
     if (filtered.length === 0) {
       const empty = document.createElement('div');
@@ -531,15 +697,17 @@ document.addEventListener('DOMContentLoaded', () => {
     filtered.forEach(item => {
       const row = document.createElement('div');
       let statusClass = 'is-taken';
-      let badgeHtml = '<span class="domain-status-badge badge-taken">Taken</span>';
+      let badgeClass = 'badge-taken';
+      let badgeText = 'Taken';
 
       if (item.isAvailable) {
         statusClass = 'is-available';
-        badgeHtml = '<span class="domain-status-badge badge-available">Available</span>';
+        badgeClass = 'badge-available';
+        badgeText = 'Available';
       } else if (item.isAftermarket) {
         statusClass = 'is-aftermarket';
-        const priceStr = item.marketPrice ? `$${item.marketPrice.toLocaleString()}` : 'For Sale';
-        badgeHtml = `<span class="domain-status-badge badge-aftermarket">${priceStr}</span>`;
+        badgeClass = 'badge-aftermarket';
+        badgeText = item.marketPrice ? `$${item.marketPrice.toLocaleString()}` : 'For Sale';
       }
 
       row.className = `domain-item ${statusClass}`;
@@ -547,72 +715,45 @@ document.addEventListener('DOMContentLoaded', () => {
       const baseName = item.name;
       const tld = item.tld;
 
-      const isStarred = starredDomains.has(item.domain);
-      const starBtnHtml = `
-        <button class="btn-star ${isStarred ? 'is-starred' : ''}" data-domain="${escapeHtml(item.domain)}" title="${isStarred ? 'Remove from starred' : 'Add to starred'}">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="${isStarred ? '#facc15' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-          </svg>
-        </button>
-      `;
+      // 1. Left container (domain name + status badge)
+      const domainLeft = document.createElement('div');
+      domainLeft.className = 'domain-left';
 
-      let actionButtonsHtml = '';
+      const domainName = document.createElement('span');
+      domainName.className = 'domain-name';
+      domainName.textContent = baseName;
+
+      const tldPart = document.createElement('span');
+      tldPart.className = 'tld-part';
+      tldPart.textContent = `.${tld}`;
+      domainName.appendChild(tldPart);
+
+      const statusBadge = document.createElement('span');
+      statusBadge.className = `domain-status-badge ${badgeClass}`;
+      statusBadge.textContent = badgeText;
+
+      domainLeft.appendChild(domainName);
+      domainLeft.appendChild(statusBadge);
+
+      // 2. Right container (action buttons)
+      const domainRight = document.createElement('div');
+      domainRight.className = 'domain-right';
+
       if (item.isAvailable) {
-        actionButtonsHtml = `
-          <button class="btn-continue" data-domain="${escapeHtml(item.domain)}" title="Register ${escapeHtml(item.domain)}">
-            <span>Continue</span>
-            <svg class="chevron-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-          </button>
-        `;
+        domainRight.appendChild(createContinueBtn(item.domain));
       } else if (item.isAftermarket) {
         const market = item.marketName || 'Market';
-        actionButtonsHtml = `
-          <button class="btn-aftermarket-action" data-domain="${escapeHtml(item.domain)}" data-market="${escapeHtml(market)}" title="View listing on ${escapeHtml(market)}">
-            <span>Buy / Offer</span>
-            <svg class="action-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-              <polyline points="15 3 21 3 21 9"></polyline>
-              <line x1="10" y1="14" x2="21" y2="3"></line>
-            </svg>
-          </button>
-        `;
+        domainRight.appendChild(createAftermarketBtn(item.domain, market));
       } else {
-        // Taken domain: WHOIS and Wayback Machine inspection buttons
-        actionButtonsHtml = `
-          <button class="btn-item-action btn-whois" data-domain="${escapeHtml(item.domain)}" title="WHOIS lookup for ${escapeHtml(item.domain)}">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-          </button>
-          <button class="btn-item-action btn-wayback" data-domain="${escapeHtml(item.domain)}" title="Wayback Machine archive for ${escapeHtml(item.domain)}">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-          </button>
-        `;
+        domainRight.appendChild(createWhoisBtn(item.domain));
+        domainRight.appendChild(createWaybackBtn(item.domain));
       }
 
-      row.innerHTML = `
-        <div class="domain-left">
-          <span class="domain-name">${escapeHtml(baseName)}<span class="tld-part">.${escapeHtml(tld)}</span></span>
-          ${badgeHtml}
-        </div>
-        <div class="domain-right">
-          ${actionButtonsHtml}
-          <button class="btn-item-action btn-copy-single" data-domain="${escapeHtml(item.domain)}" title="Copy ${escapeHtml(item.domain)}">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-            </svg>
-          </button>
-          ${starBtnHtml}
-        </div>
-      `;
+      domainRight.appendChild(createCopyBtn(item.domain));
+      domainRight.appendChild(createStarBtn(item.domain, starredDomains.has(item.domain)));
 
+      row.appendChild(domainLeft);
+      row.appendChild(domainRight);
       resultsList.appendChild(row);
     });
   }
