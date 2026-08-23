@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (market.includes('godaddy')) {
       return `https://www.godaddy.com/domainsearch/find?domainToCheck=${enc}`;
     }
-    return `https://www.afternic.com/search?keyword=${enc}`;
+    return `https://www.afternic.com/AddToCart.do?selectedDomains=${enc}`;
   }
 
   // Inspection URLs
