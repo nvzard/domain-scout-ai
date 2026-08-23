@@ -7,9 +7,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // State
   let preferredTlds = ['com', 'io', 'ai'];
   let currentResults = [];
-  let currentFilter = 'available'; // 'available' | 'all' | 'aftermarket'
+  let currentFilter = 'available'; // 'available' | 'all' | 'aftermarket' | 'starred'
   let searchTerm = '';
   let isChecking = false;
+  let starredDomains = new Set();
 
   // DOM Elements
   const domainInput = document.getElementById('domainInput');
@@ -19,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnResetTlds = document.getElementById('btnResetTlds');
   const quickTldButtons = document.querySelectorAll('.tld-quick-pill');
 
+  const btnVariations = document.getElementById('btnVariations');
   const btnSample = document.getElementById('btnSample');
   const btnClearInput = document.getElementById('btnClearInput');
   const btnCheck = document.getElementById('btnCheck');
@@ -39,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const tabCountAvail = document.getElementById('tabCountAvail');
   const tabCountAll = document.getElementById('tabCountAll');
   const tabCountMarket = document.getElementById('tabCountMarket');
+  const tabCountStarred = document.getElementById('tabCountStarred');
 
   const statCardAvailable = document.getElementById('statCardAvailable');
   const statCardTaken = document.getElementById('statCardTaken');
@@ -128,6 +131,70 @@ document.addEventListener('DOMContentLoaded', () => {
     registrarDropdown.style.left = `${left}px`;
   }
 
+  // Aftermarket marketplace URL generator
+  function getAftermarketUrl(domain, marketName) {
+    const market = (marketName || '').toLowerCase();
+    const enc = encodeURIComponent(domain);
+    if (market.includes('sedo')) {
+      return `https://sedo.com/search/?keyword=${enc}`;
+    }
+    if (market.includes('dan')) {
+      return `https://dan.com/buy-domain/${enc}`;
+    }
+    if (market.includes('godaddy')) {
+      return `https://www.godaddy.com/domainsearch/find?domainToCheck=${enc}`;
+    }
+    return `https://www.afternic.com/search?keyword=${enc}`;
+  }
+
+  // Inspection URLs
+  function getWhoisUrl(domain) {
+    return `https://lookup.icann.org/en/lookup?name=${encodeURIComponent(domain)}`;
+  }
+
+  function getWaybackUrl(domain) {
+    return `https://web.archive.org/web/*/${encodeURIComponent(domain)}`;
+  }
+
+  // Smart Variations Generator
+  const VARIATION_PREFIXES = ['get', 'try', 'use', 'go', 'join', 'my', 'the', 'hey', 'we', 'all', 'open', 'pure', 'true', 'smart'];
+  const VARIATION_SUFFIXES = ['app', 'hq', 'base', 'hub', 'flow', 'ly', 'ify', 'lab', 'space', 'stack', 'pro', 'box', 'studio', 'craft'];
+
+  function generateVariations(text) {
+    const rawTokens = text
+      .split(/[\r\n,;]+/)
+      .map(s => DomainChecker.cleanDomainInput(s))
+      .filter(Boolean);
+
+    let seeds = rawTokens;
+    if (seeds.length === 0) {
+      seeds = ['launch', 'scout'];
+    }
+
+    const generated = new Set();
+    seeds.forEach(seed => {
+      const base = seed.split('.')[0].toLowerCase();
+      if (!base) return;
+      generated.add(base);
+      VARIATION_PREFIXES.slice(0, 6).forEach(p => generated.add(`${p}${base}`));
+      VARIATION_SUFFIXES.slice(0, 7).forEach(s => generated.add(`${base}${s}`));
+    });
+
+    return Array.from(generated);
+  }
+
+  function toggleStar(domain) {
+    if (starredDomains.has(domain)) {
+      starredDomains.delete(domain);
+      showToast(`Removed ${domain} from starred`);
+    } else {
+      starredDomains.add(domain);
+      showToast(`★ Starred ${domain}!`);
+    }
+    persistState();
+    renderResults();
+  }
+
   // Sample data
   const sampleDomains = [
     "LaunchList — products get listed for discovery",
@@ -187,12 +254,15 @@ document.addEventListener('DOMContentLoaded', () => {
   // Load Persisted State
   async function loadPersistedState() {
     try {
-      const data = await getStoredData(['domainInput', 'preferredTlds', 'lastResults', 'currentFilter']);
+      const data = await getStoredData(['domainInput', 'preferredTlds', 'lastResults', 'currentFilter', 'starredDomains']);
       if (data.preferredTlds && Array.isArray(data.preferredTlds) && data.preferredTlds.length > 0) {
         preferredTlds = data.preferredTlds;
       }
       if (data.domainInput) {
         domainInput.value = data.domainInput;
+      }
+      if (data.starredDomains && Array.isArray(data.starredDomains)) {
+        starredDomains = new Set(data.starredDomains);
       }
       if (data.lastResults && Array.isArray(data.lastResults) && data.lastResults.length > 0) {
         currentResults = data.lastResults;
@@ -211,7 +281,8 @@ document.addEventListener('DOMContentLoaded', () => {
         domainInput: domainInput.value,
         preferredTlds,
         lastResults: currentResults,
-        currentFilter
+        currentFilter,
+        starredDomains: Array.from(starredDomains)
       });
     } catch (e) {
       console.warn('Could not save storage state', e);
@@ -403,6 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const availableItems = currentResults.filter(r => r.isAvailable);
     const takenItems = currentResults.filter(r => r.isRegistered && !r.isAftermarket);
     const aftermarketItems = currentResults.filter(r => r.isAftermarket);
+    const starredItems = currentResults.filter(r => starredDomains.has(r.domain));
 
     // Update Counts
     countAvailable.textContent = availableItems.length;
@@ -413,6 +485,9 @@ document.addEventListener('DOMContentLoaded', () => {
     tabCountAvail.textContent = availableItems.length;
     tabCountAll.textContent = totalCount;
     tabCountMarket.textContent = aftermarketItems.length;
+    if (tabCountStarred) {
+      tabCountStarred.textContent = starredItems.length;
+    }
 
     // Update Tab UI
     filterTabs.forEach(tab => {
@@ -429,6 +504,8 @@ document.addEventListener('DOMContentLoaded', () => {
       filtered = availableItems;
     } else if (currentFilter === 'aftermarket') {
       filtered = aftermarketItems;
+    } else if (currentFilter === 'starred') {
+      filtered = starredItems;
     }
 
     // Apply Search Term
@@ -470,13 +547,50 @@ document.addEventListener('DOMContentLoaded', () => {
       const baseName = item.name;
       const tld = item.tld;
 
-      let continueBtnHtml = '';
+      const isStarred = starredDomains.has(item.domain);
+      const starBtnHtml = `
+        <button class="btn-star ${isStarred ? 'is-starred' : ''}" data-domain="${escapeHtml(item.domain)}" title="${isStarred ? 'Remove from starred' : 'Add to starred'}">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="${isStarred ? '#facc15' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+        </button>
+      `;
+
+      let actionButtonsHtml = '';
       if (item.isAvailable) {
-        continueBtnHtml = `
+        actionButtonsHtml = `
           <button class="btn-continue" data-domain="${escapeHtml(item.domain)}" title="Register ${escapeHtml(item.domain)}">
             <span>Continue</span>
             <svg class="chevron-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+        `;
+      } else if (item.isAftermarket) {
+        const market = item.marketName || 'Market';
+        actionButtonsHtml = `
+          <button class="btn-aftermarket-action" data-domain="${escapeHtml(item.domain)}" data-market="${escapeHtml(market)}" title="View listing on ${escapeHtml(market)}">
+            <span>Buy / Offer</span>
+            <svg class="action-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line>
+            </svg>
+          </button>
+        `;
+      } else {
+        // Taken domain: WHOIS and Wayback Machine inspection buttons
+        actionButtonsHtml = `
+          <button class="btn-item-action btn-whois" data-domain="${escapeHtml(item.domain)}" title="WHOIS lookup for ${escapeHtml(item.domain)}">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </button>
+          <button class="btn-item-action btn-wayback" data-domain="${escapeHtml(item.domain)}" title="Wayback Machine archive for ${escapeHtml(item.domain)}">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
             </svg>
           </button>
         `;
@@ -488,13 +602,14 @@ document.addEventListener('DOMContentLoaded', () => {
           ${badgeHtml}
         </div>
         <div class="domain-right">
-          ${continueBtnHtml}
+          ${actionButtonsHtml}
           <button class="btn-item-action btn-copy-single" data-domain="${escapeHtml(item.domain)}" title="Copy ${escapeHtml(item.domain)}">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
             </svg>
           </button>
+          ${starBtnHtml}
         </div>
       `;
 
@@ -533,15 +648,35 @@ document.addEventListener('DOMContentLoaded', () => {
     renderResults();
   });
 
+  // Variations Button
+  if (btnVariations) {
+    btnVariations.addEventListener('click', () => {
+      const currentVal = domainInput.value.trim();
+      const variations = generateVariations(currentVal);
+      domainInput.value = variations.join('\n');
+      persistState();
+      showToast(`⚡ Generated ${variations.length} variations! Click Check.`);
+    });
+  }
+
   // Search Filter Input
   searchFilterInput.addEventListener('input', (e) => {
     searchTerm = e.target.value.trim();
     renderResults();
   });
 
-  // Results List Actions (Continue Dropdown & Single Domain Copy)
+  // Results List Actions
   resultsList.addEventListener('click', (e) => {
-    // 1. Continue dropdown trigger
+    // 1. Star / Favorite toggle
+    const starBtn = e.target.closest('.btn-star');
+    if (starBtn) {
+      e.stopPropagation();
+      const domain = starBtn.getAttribute('data-domain');
+      if (domain) toggleStar(domain);
+      return;
+    }
+
+    // 2. Continue dropdown trigger
     const continueBtn = e.target.closest('.btn-continue');
     if (continueBtn) {
       e.stopPropagation();
@@ -552,7 +687,41 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // 2. Single Domain Copy
+    // 3. Aftermarket action
+    const aftermarketBtn = e.target.closest('.btn-aftermarket-action');
+    if (aftermarketBtn) {
+      e.stopPropagation();
+      const domain = aftermarketBtn.getAttribute('data-domain');
+      const market = aftermarketBtn.getAttribute('data-market');
+      if (domain) {
+        openExternalUrl(getAftermarketUrl(domain, market));
+      }
+      return;
+    }
+
+    // 4. WHOIS lookup
+    const whoisBtn = e.target.closest('.btn-whois');
+    if (whoisBtn) {
+      e.stopPropagation();
+      const domain = whoisBtn.getAttribute('data-domain');
+      if (domain) {
+        openExternalUrl(getWhoisUrl(domain));
+      }
+      return;
+    }
+
+    // 5. Wayback Machine archive
+    const waybackBtn = e.target.closest('.btn-wayback');
+    if (waybackBtn) {
+      e.stopPropagation();
+      const domain = waybackBtn.getAttribute('data-domain');
+      if (domain) {
+        openExternalUrl(getWaybackUrl(domain));
+      }
+      return;
+    }
+
+    // 6. Single Domain Copy
     const copyBtn = e.target.closest('.btn-copy-single');
     if (copyBtn) {
       const domain = copyBtn.getAttribute('data-domain');
@@ -603,8 +772,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Copy Available List
+  // Copy Available / Starred List
   btnCopyAvailable.addEventListener('click', () => {
+    let targets = [];
+    if (currentFilter === 'starred') {
+      targets = currentResults.filter(r => starredDomains.has(r.domain)).map(r => r.domain);
+      if (targets.length === 0) {
+        showToast('No starred domains to copy');
+        return;
+      }
+      copyToClipboard(targets.join('\n'));
+      showToast(`Copied ${targets.length} starred domain${targets.length > 1 ? 's' : ''}!`);
+      return;
+    }
+
     const available = currentResults.filter(r => r.isAvailable).map(r => r.domain);
     if (available.length === 0) {
       showToast('No available domains to copy');
@@ -623,10 +804,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const available = currentResults.filter(r => r.isAvailable);
+    const starred = currentResults.filter(r => starredDomains.has(r.domain));
+
     const content = [
       '# Domain Availability Report',
       `# Generated: ${new Date().toISOString()}`,
-      `# Total Checked: ${currentResults.length} | Available: ${available.length}`,
+      `# Total Checked: ${currentResults.length} | Available: ${available.length} | Starred: ${starred.length}`,
+      '',
+      '## STARRED / SHORTLISTED DOMAINS:',
+      ...(starred.map(r => r.domain)),
       '',
       '## AVAILABLE DOMAINS:',
       ...(available.map(r => r.domain)),

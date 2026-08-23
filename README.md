@@ -79,9 +79,14 @@ domain-checker-extension/
   - Format 2: Commas (`name1, name2, name3.com`)
   - Format 3: Brainstorm notes (`LaunchList — products get listed for discovery`)
 - **TLD Preferences**: Default top 3 (`.com`, `.io`, `.ai`) + customizable chips (`.co`, `.dev`, `.app`, `.org`, `.xyz`, etc.).
-- **Instant Filtering**: Available domains filter, Registered and Aftermarket / For-sale pricing.
+- **⚡ Smart Variations Generator**: 1-click generation of startup-friendly prefixes (`get`, `try`, `use`, `go`, `join`, `my`, `hey`) and suffixes (`app`, `hq`, `base`, `hub`, `flow`, `ly`, `ify`, `lab`, `stack`, `pro`).
+- **Instant Filtering & Dashboard**: Filter tabs for Available, All, For Sale, and Starred domains.
+- **🌟 Starred / Shortlist Favorites**: Bookmark favorite domains with local persistence and export options.
+- **🛒 Direct Registrar Integration**: "Continue" button with dropdown to register domains on GoDaddy, Hostinger, Spaceship, Domain.com, and Namecheap.
+- **🏷️ Aftermarket "Buy / Offer"**: Direct links to secondary marketplaces (Afternic, Sedo, Dan.com, GoDaddy) for for-sale domains.
+- **🔍 Domain Inspection Tools**: 1-click WHOIS lookup and Wayback Machine archive history for registered domains.
 - **Productivity**:
-  - One-click **"Copy Available"** button.
+  - One-click **"Copy Available"** / **"Copy Starred"** buttons.
   - Individual domain copy buttons.
   - Export to `.txt` report.
   - Shortcut: `Cmd+Enter` (Mac) / `Ctrl+Enter` (Windows/Linux).

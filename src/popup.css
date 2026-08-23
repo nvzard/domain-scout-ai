@@ -875,6 +875,98 @@ textarea#domainInput::placeholder {
   transform: translate(1px, -1px);
 }
 
+/* Star Button */
+.btn-star {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-star:hover {
+  color: #facc15;
+  border-color: rgba(250, 204, 21, 0.4);
+  background: rgba(250, 204, 21, 0.08);
+}
+
+.btn-star.is-starred {
+  color: #facc15;
+  border-color: rgba(250, 204, 21, 0.5);
+  background: rgba(250, 204, 21, 0.14);
+  box-shadow: 0 0 10px rgba(250, 204, 21, 0.25);
+}
+
+.btn-star svg {
+  transition: transform 0.15s ease;
+}
+
+.btn-star:active svg {
+  transform: scale(1.25);
+}
+
+/* Aftermarket Buy / Offer Action Button */
+.btn-aftermarket-action {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.25);
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.btn-aftermarket-action:hover {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  box-shadow: 0 3px 10px rgba(245, 158, 11, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-aftermarket-action:active {
+  transform: translateY(0);
+}
+
+.btn-aftermarket-action .action-arrow {
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.btn-aftermarket-action:hover .action-arrow {
+  transform: translate(1px, -1px);
+}
+
+/* Inspection Action Buttons (WHOIS & Wayback Machine) */
+.btn-whois:hover {
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.4);
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.btn-wayback:hover {
+  color: #a78bfa;
+  border-color: rgba(167, 139, 250, 0.4);
+  background: rgba(167, 139, 250, 0.08);
+}
+
+#btnVariations:hover {
+  color: #f7d64c;
+  border-color: rgba(247, 214, 76, 0.4);
+  background: rgba(247, 214, 76, 0.08);
+}
+
 .btn-item-action {
   background: transparent;
   border: 1px solid var(--border-color);
