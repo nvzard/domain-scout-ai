@@ -1,0 +1,17 @@
+{
+  "name": "domain-availability-checker-extension",
+  "version": "1.0.1",
+  "description": "Cross-browser domain availability checker extension for Google Chrome and Mozilla Firefox.",
+  "scripts": {
+    "build": "node build.js",
+    "watch": "node build.js --watch"
+  },
+  "keywords": [
+    "chrome-extension",
+    "firefox-extension",
+    "domain-checker",
+    "instantdomainsearch"
+  ],
+  "author": "Antigravity",
+  "license": "MIT"
+}

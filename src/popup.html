@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Domain Availability Checker</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="logo-icon">
+          <svg viewBox="0 0 511.999 511.999" width="22" height="22">
+            <path style="fill:#F7D64C;"
+              d="M318.726,199.927h86.463c9.936,0,15.318,11.632,8.886,19.206L174.712,500.979 c-5.824,6.858-16.965,1.554-15.316-7.29l33.882-181.615H106.81c-9.936,0-15.318-11.632-8.886-19.206L337.288,11.02 c5.823-6.858,16.965-1.554,15.316,7.29L318.726,199.927z" />
+            <path style="opacity:0.1;"
+              d="M171.906,484.026l33.726-180.778c0.417-2.235-1.298-4.3-3.571-4.3h-83.744 c-9.628,0-15.052-10.716-9.927-18.405l-10.466,12.324c-6.432,7.573-1.049,19.206,8.887,19.206h86.469l-33.882,181.615 c-1.65,8.844,9.491,14.148,15.316,7.29l5.405-6.365C175.249,494.236,170.81,489.899,171.906,484.026z" />
+            <path style="opacity:0.3;fill:#FFFFFF;"
+              d="M304.356,155.55c0,11.056,8.005,20.222,18.53,22.075 l8.223-44.086c-1.398-0.272-2.84-0.425-4.317-0.425C314.402,133.113,304.356,143.158,304.356,155.55z M405.189,199.927H357.58 c5.363,17.548,21.681,30.312,40.984,30.312c2.208,0,4.377-0.168,6.495-0.49l9.016-10.616 C420.507,211.559,415.125,199.927,405.189,199.927z M337.288,11.02l-45.067,53.066c1.324,25.435,18.453,46.678,41.75,54.114 l18.633-99.891C354.253,9.466,343.112,4.163,337.288,11.02z" />
+            <path
+              d="M183.111,230.954c-4.355,0-7.885,3.53-7.885,7.885v8.706c0,4.355,3.53,7.885,7.885,7.885s7.885-3.53,7.885-7.885v-8.706 C190.996,234.484,187.465,230.954,183.111,230.954z M304.356,255.567c-4.355,0-7.885,3.53-7.885,7.885 c0,6.955-5.657,12.612-12.612,12.612s-12.613-5.658-12.613-12.612c0-4.355-3.53-7.885-7.885-7.885c-4.355,0-7.885,3.53-7.885,7.885 c0,6.955-5.658,12.612-12.613,12.612c-6.955,0-12.612-5.658-12.612-12.612c0-4.355-3.53-7.885-7.885-7.885 c-4.355,0-7.885,3.53-7.885,7.885c0,15.65,12.733,28.382,28.382,28.382c8.05,0,15.327-3.368,20.498-8.769 c5.17,5.402,12.448,8.769,20.498,8.769c15.65,0,28.382-12.733,28.382-28.382C312.241,259.098,308.711,255.567,304.356,255.567z M343.614,230.954c-4.355,0-7.885,3.53-7.885,7.885v8.706c0,4.355,3.53,7.885,7.885,7.885c4.355,0,7.885-3.53,7.885-7.885v-8.706 C351.499,234.484,347.969,230.954,343.614,230.954z M422.926,203.378c-3.236-6.992-10.032-11.336-17.737-11.336h-76.972 l32.138-172.286c1.405-7.533-2.3-14.806-9.219-18.099c-6.919-3.292-14.898-1.58-19.859,4.259L91.913,287.764 c-4.988,5.873-6.077,13.865-2.841,20.857c3.235,6.992,10.032,11.336,17.737,11.336h76.976l-32.14,172.284 c-1.406,7.533,2.298,14.806,9.217,18.099c2.347,1.118,4.814,1.658,7.246,1.658c4.738,0,9.336-2.056,12.615-5.917l239.364-281.846 C425.073,218.363,426.162,210.371,422.926,203.378z M408.066,214.028L168.701,495.875c-0.208,0.244-0.443,0.521-1.061,0.227 s-0.551-0.652-0.493-0.967l33.882-181.616c0.43-2.305-0.188-4.682-1.686-6.485c-1.498-1.803-3.721-2.846-6.065-2.846H106.81 c-2.176,0-3.12-1.531-3.424-2.189c-0.305-0.658-0.86-2.368,0.549-4.028L343.299,16.124c0.144-0.169,0.301-0.354,0.59-0.354 c0.128,0,0.282,0.037,0.472,0.127c0.618,0.294,0.552,0.652,0.493,0.967L310.974,198.48c-0.43,2.305,0.188,4.682,1.686,6.485 c1.498,1.803,3.721,2.847,6.065,2.847h86.463c2.176,0,3.12,1.531,3.424,2.189C408.918,210.659,409.475,212.368,408.066,214.028z" />
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>Domain Checker</h1>
+          <!-- <span class="subtitle">Bulk Availability via InstantDomainSearch</span> -->
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="btnSample" class="btn-ghost" title="Load sample names">Sample</button>
+        <button id="btnClearInput" class="btn-ghost" title="Clear input">Clear</button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="app-main">
+      <!-- Input Section -->
+      <section class="section input-section">
+        <div class="section-header">
+          <div class="section-title-group">
+            <label for="domainInput" class="section-title">Input Names / Domains</label>
+            <span class="section-subtitle">Newlines, commas, or descriptions</span>
+          </div>
+        </div>
+        <div class="textarea-wrapper">
+          <textarea id="domainInput"
+            placeholder="Format 1 (newlines):&#10;name1&#10;name2&#10;&#10;Format 2 (commas):&#10;name1, name2, name3.com&#10;&#10;Format 3 (with notes):&#10;LaunchList — very clear; products get listed"
+            rows="5" spellcheck="false"></textarea>
+        </div>
+      </section>
+
+      <!-- Preferences Section -->
+      <section class="section preferences-section">
+        <div class="section-header">
+          <div class="section-title-group">
+            <span class="section-title">TLD Preferences</span>
+            <span class="section-subtitle">Checked for base names</span>
+          </div>
+          <button id="btnResetTlds" class="btn-link" title="Reset to .com, .io, .ai">Default (Top 3)</button>
+        </div>
+
+        <div class="tld-chips-container" id="tldChipsContainer">
+          <!-- Active TLD chips populated by JS -->
+        </div>
+
+        <div class="tld-management-row">
+          <div class="input-with-btn">
+            <span class="prefix">.</span>
+            <input type="text" id="newTldInput" placeholder="tld (e.g. co, dev)" maxlength="20">
+            <button id="btnAddTld" class="btn-small">Add</button>
+          </div>
+          <div class="quick-tlds-wrapper">
+            <span class="quick-label">Quick add:</span>
+            <div class="quick-tlds">
+              <button class="tld-quick-pill" data-tld="com">.com</button>
+              <button class="tld-quick-pill" data-tld="io">.io</button>
+              <button class="tld-quick-pill" data-tld="ai">.ai</button>
+              <button class="tld-quick-pill" data-tld="co">.co</button>
+              <button class="tld-quick-pill" data-tld="dev">.dev</button>
+              <button class="tld-quick-pill" data-tld="app">.app</button>
+              <button class="tld-quick-pill" data-tld="org">.org</button>
+              <button class="tld-quick-pill" data-tld="net">.net</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Primary Action -->
+      <div class="action-row">
+        <button id="btnCheck" class="btn-primary">
+          <span class="btn-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </span>
+          <span id="btnCheckText">Check Availability</span>
+          <span class="keyboard-hint">⌘+Enter</span>
+        </button>
+      </div>
+
+      <!-- Progress Bar (hidden by default) -->
+      <div id="progressContainer" class="progress-container hidden">
+        <div class="progress-info">
+          <span id="progressText">Checking domains...</span>
+          <span id="progressPercent">0%</span>
+        </div>
+        <div class="progress-bar-track">
+          <div id="progressBarFill" class="progress-bar-fill" style="width: 0%;"></div>
+        </div>
+      </div>
+
+      <!-- Status / Summary Dashboard (hidden until checked) -->
+      <div id="resultsDashboard" class="results-dashboard hidden">
+        <div class="stats-grid">
+          <div class="stat-card stat-available" id="statCardAvailable" role="button" tabindex="0">
+            <span class="stat-value" id="countAvailable">0</span>
+            <span class="stat-label">Available</span>
+          </div>
+          <div class="stat-card stat-taken" id="statCardTaken" role="button" tabindex="0">
+            <span class="stat-value" id="countTaken">0</span>
+            <span class="stat-label">Registered</span>
+          </div>
+          <div class="stat-card stat-aftermarket" id="statCardAftermarket" role="button" tabindex="0">
+            <span class="stat-value" id="countAftermarket">0</span>
+            <span class="stat-label">For Sale</span>
+          </div>
+          <div class="stat-card stat-total" id="statCardTotal" role="button" tabindex="0">
+            <span class="stat-value" id="countTotal">0</span>
+            <span class="stat-label">Total</span>
+          </div>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="toolbar">
+          <div class="filter-tabs">
+            <button class="filter-tab active" data-filter="available" id="tabAvailable">Available (<span
+                id="tabCountAvail">0</span>)</button>
+            <button class="filter-tab" data-filter="all" id="tabAll">All (<span id="tabCountAll">0</span>)</button>
+            <button class="filter-tab" data-filter="aftermarket" id="tabAftermarket">For Sale (<span
+                id="tabCountMarket">0</span>)</button>
+          </div>
+
+          <div class="toolbar-actions">
+            <button id="btnCopyAvailable" class="btn-action" title="Copy available domains to clipboard">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              <span>Copy Available</span>
+            </button>
+            <button id="btnExport" class="btn-action" title="Export as text file">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>Export</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Search / Filter within results -->
+        <div class="search-filter-box">
+          <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2.2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="searchFilterInput" placeholder="Filter domains (e.g. .io or name)...">
+        </div>
+
+        <!-- Results List -->
+        <div class="results-list" id="resultsList">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden"></div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="domain-checker.js"></script>
+  <script src="popup.js"></script>
+</body>
+
+</html>

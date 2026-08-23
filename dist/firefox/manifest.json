@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "Domain Availability Checker",
+  "version": "1.0.1",
+  "description": "Instant bulk domain availability checker for .com, .io, .ai and more via InstantDomainSearch.",
+  "author": "Antigravity",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "domain-checker@antigravity.tools",
+      "strict_min_version": "109.0"
+    }
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Domain Availability Checker",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "permissions": [
+    "storage",
+    "clipboardWrite"
+  ],
+  "host_permissions": [
+    "https://cloud.instantdomainsearch.com/*"
+  ],
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
+}
