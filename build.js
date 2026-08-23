@@ -80,8 +80,36 @@ function buildAll() {
     console.log(`✓ Synced legacy directory -> ${LEGACY_FIREFOX_DIR}`);
   }
 
+  // 4. Package to zip if requested
+  if (process.argv.includes('--package')) {
+    packageDistributions();
+  }
+
   const elapsed = Date.now() - startTime;
   console.log(`✨ Build completed in ${elapsed}ms!\n`);
+}
+
+function packageDistributions() {
+  const { execSync } = require('child_process');
+  const pkgDir = path.join(ROOT_DIR, 'packages');
+  if (!fs.existsSync(pkgDir)) {
+    fs.mkdirSync(pkgDir, { recursive: true });
+  }
+
+  const pkgJson = JSON.parse(fs.readFileSync(path.join(ROOT_DIR, 'package.json'), 'utf8'));
+  const version = pkgJson.version || '1.0.0';
+
+  const chromeZip = path.join(pkgDir, `domain-scout-chrome-v${version}.zip`);
+  const firefoxZip = path.join(pkgDir, `domain-scout-firefox-v${version}.zip`);
+
+  if (fs.existsSync(chromeZip)) fs.unlinkSync(chromeZip);
+  if (fs.existsSync(firefoxZip)) fs.unlinkSync(firefoxZip);
+
+  execSync(`cd "${path.join(DIST_DIR, 'chrome')}" && zip -rq "${chromeZip}" ./*`);
+  execSync(`cd "${path.join(DIST_DIR, 'firefox')}" && zip -rq "${firefoxZip}" ./*`);
+
+  console.log(`🎁 Packaged Chrome -> ${chromeZip}`);
+  console.log(`🎁 Packaged Firefox -> ${firefoxZip}`);
 }
 
 // Watch mode

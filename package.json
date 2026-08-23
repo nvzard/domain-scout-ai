@@ -4,6 +4,7 @@
   "description": "Cross-browser domain availability checker extension for Google Chrome and Mozilla Firefox.",
   "scripts": {
     "build": "node build.js",
+    "package": "node build.js --package",
     "watch": "node build.js --watch"
   },
   "keywords": [
