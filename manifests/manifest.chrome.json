@@ -3,7 +3,7 @@
   "name": "Domain Scout - Fast Domain Search",
   "version": "1.0.1",
   "description": "Instant bulk domain availability checker for .com, .io, .ai and more via InstantDomainSearch.",
-  "author": "Antigravity",
+  "author": "Zulu",
   "action": {
     "default_popup": "popup.html",
     "default_title": "Domain Scout - Fast Domain Search",

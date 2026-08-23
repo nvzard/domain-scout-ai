@@ -3,10 +3,10 @@
   "name": "Domain Scout - Fast Domain Search",
   "version": "1.0.1",
   "description": "Instant bulk domain availability checker for .com, .io, .ai and more via InstantDomainSearch.",
-  "author": "Antigravity",
+  "author": "Zulu",
   "browser_specific_settings": {
     "gecko": {
-      "id": "domain-checker@antigravity.tools",
+      "id": "domain-scout@zulu.tools",
       "strict_min_version": "109.0"
     }
   },
