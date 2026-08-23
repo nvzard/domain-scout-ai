@@ -55,7 +55,7 @@ domain-checker-extension/
 3. Click **"Load unpacked"**.
 4. Select the directory:
    ```
-   /Users/nitanshu/workspace/scripts/domain-checker-extension/dist/chrome
+   /domain-availability-checker/dist/chrome
    ```
 5. Click the extension icon in your Chrome toolbar to use it!
 
@@ -66,7 +66,7 @@ domain-checker-extension/
 2. Click **"Load Temporary Add-on..."**.
 3. Select the file:
    ```
-   /Users/nitanshu/workspace/scripts/domain-checker-extension/dist/firefox/manifest.json
+   /domain-availability-checker/dist/firefox/manifest.json
    ```
 4. Click the extension icon in your Firefox toolbar!
 
