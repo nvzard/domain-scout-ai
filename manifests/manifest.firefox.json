@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Domain Availability Checker",
+  "name": "Domain Scout - Fast Domain Search",
   "version": "1.0.1",
   "description": "Instant bulk domain availability checker for .com, .io, .ai and more via InstantDomainSearch.",
   "author": "Antigravity",
@@ -12,7 +12,7 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Domain Availability Checker",
+    "default_title": "Domain Scout - Fast Domain Search",
     "default_icon": {
       "16": "icons/icon-16.png",
       "32": "icons/icon-32.png",

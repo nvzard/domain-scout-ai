@@ -54,7 +54,7 @@ function buildTarget(targetName, manifestFilename) {
 
 function buildAll() {
   const startTime = Date.now();
-  console.log('\n📦 Building Domain Availability Checker Extensions...');
+  console.log('\n📦 Building Domain Scout - Fast Domain Search Extensions...');
 
   // Ensure icons exist in src/
   const srcIconsDir = path.join(SRC_DIR, 'icons');
