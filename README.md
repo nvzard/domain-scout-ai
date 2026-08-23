@@ -2,7 +2,7 @@
 
 A unified, high-performance browser extension for **Google Chrome** and **Mozilla Firefox** that bulk-checks domain availability across top TLDs (`.com`, `.io`, `.ai`, etc.) via InstantDomainSearch.
 
-![Domain Availability Checker Banner](store-assets/promo-marquee-1400x560.png)
+![Domain Availability Checker Banner](https://raw.githubusercontent.com/nvzard/domain-scout/refs/heads/main/store-assets/promo-marquee-1400x560.png)
 
 🎥 **Demo Video**: [Watch on YouTube (https://youtu.be/ZstDT9bYeqc)](https://youtu.be/ZstDT9bYeqc)
 
