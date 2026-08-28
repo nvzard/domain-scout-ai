@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnClearInput = document.getElementById('btnClearInput');
   const btnCheck = document.getElementById('btnCheck');
   const btnCheckText = document.getElementById('btnCheckText');
+  const keyboardHint = document.getElementById('keyboardHint');
 
   const progressContainer = document.getElementById('progressContainer');
   const progressBarFill = document.getElementById('progressBarFill');
@@ -552,6 +553,23 @@ document.addEventListener('DOMContentLoaded', () => {
     persistState();
   });
 
+  // Dynamic OS-adaptive shortcut hint (⌘+Enter on Mac, Ctrl+Enter on Windows/Linux)
+  // Uses standard navigator APIs - zero extra permissions required
+  function initKeyboardShortcutHint() {
+    if (!keyboardHint) return;
+    let isMac = false;
+    if (typeof navigator !== 'undefined') {
+      if (navigator.userAgentData && typeof navigator.userAgentData.platform === 'string') {
+        isMac = /mac/i.test(navigator.userAgentData.platform);
+      } else {
+        const platform = navigator.platform || '';
+        const userAgent = navigator.userAgent || '';
+        isMac = /Mac|iPhone|iPod|iPad/i.test(platform) || /Macintosh|Mac OS X/i.test(userAgent);
+      }
+    }
+    keyboardHint.textContent = isMac ? '⌘+Enter' : 'Ctrl+Enter';
+  }
+
   // Keyboard shortcut Cmd/Ctrl + Enter to trigger check
   document.addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
@@ -560,6 +578,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   });
+
+  initKeyboardShortcutHint();
 
   // Core Check Execution
   async function startCheck() {
