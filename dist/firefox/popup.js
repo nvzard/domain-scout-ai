@@ -196,18 +196,18 @@ document.addEventListener('DOMContentLoaded', () => {
     renderResults();
   }
 
-  // Sample data
+  // Sample data showcasing ChatGPT output formats
   const sampleDomains = [
-    "LaunchList — products get listed for discovery",
-    "TinyLaunch — specifically fits small founders",
-    "FoundersList — community-oriented",
-    "LaunchBase",
-    "ProductList",
-    "LaunchShelf",
-    "StartupShelf",
-    "Noviqo",
-    "Brevio",
-    "Novli"
+    "1. **LaunchScout** (.com, .io, .ai) — Curated discovery platform",
+    "2. **Noviqo** (com / co) — Modern AI assistant",
+    "3. *Brevio* [Short & brandable]",
+    "4. **Novli** (A creative tool for founders)",
+    "5. `LaunchBase` -> Developer portal",
+    "6. 🚀 **StartupShelf** : Community platform",
+    "7. [CloudForge](https://cloudforge.dev)",
+    "8. \"BrandSprint\" = Fast launch framework",
+    "9. Idea #9: AlphaStream // Real-time data",
+    "10. DataPulse"
   ];
 
   // Cross-browser Storage Helpers
