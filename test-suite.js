@@ -217,8 +217,8 @@ assert.strictEqual(AiGenerator.getEngineDisplayName('groq'), 'Groq (Llama 3)');
 assert.strictEqual(AiGenerator.getEngineDisplayName('openrouter'), 'OpenRouter');
 console.log('✓ Passed AI Engine Display Names tests');
 
-// Test 12: OpenRouter Response Extraction & Fallback Parsing
-console.log('\nTest 12: OpenRouter Response Extraction & Fallback Parsing');
+// Test 12: OpenRouter Response Extraction & Error Handling
+console.log('\nTest 12: OpenRouter Response Extraction & Error Handling');
 async function testOpenRouterParsing() {
   // Mock global fetch for testing custom API parser
   const originalFetch = global.fetch;
@@ -234,22 +234,44 @@ async function testOpenRouterParsing() {
     const res1 = await AiGenerator.generateWithCustomApi('openrouter', 'test-key', 'app generator');
     assert.ok(res1.includes('AppCraft.io'));
 
-    // 2. Reasoning model fallback (content is null, output is in reasoning)
+    // 2. <think> tag stripping
     global.fetch = async () => ({
       ok: true,
       json: async () => ({
         choices: [{
           message: {
-            content: null,
-            reasoning: '1. BrainStack.ai\n2. CortexFlow.io'
+            content: '<think>Let me brainstorm some names for an AI tool...</think>\n1. BrainCraft.io\n2. CortexFlow.ai'
           }
         }]
       })
     });
     const res2 = await AiGenerator.generateWithCustomApi('openrouter', 'test-key', 'brain assistant');
-    assert.ok(res2.includes('BrainStack.ai'));
+    assert.ok(!res2.includes('<think>'));
+    assert.ok(res2.includes('BrainCraft.io'));
 
-    // 3. Rate limit / 429 error message formatting
+    // 3. Reasoning model token limit (content is null, finish_reason is length)
+    global.fetch = async () => ({
+      ok: true,
+      json: async () => ({
+        choices: [{
+          finish_reason: 'length',
+          message: {
+            content: null,
+            reasoning: 'First, the user wants a plain numbered list...'
+          }
+        }]
+      })
+    });
+    let caughtLengthErr = null;
+    try {
+      await AiGenerator.generateWithCustomApi('openrouter', 'test-key', 'prompt');
+    } catch (e) {
+      caughtLengthErr = e;
+    }
+    assert.ok(caughtLengthErr, 'Should throw error when model ran out of tokens during reasoning');
+    assert.ok(caughtLengthErr.message.includes('ran out of tokens during reasoning'));
+
+    // 4. Rate limit / 429 error message formatting
     global.fetch = async () => ({
       ok: false,
       status: 429,
@@ -267,10 +289,75 @@ async function testOpenRouterParsing() {
     assert.ok(caughtErr, 'Should throw on 429 error');
     assert.ok(caughtErr.message.includes('rate-limited') || caughtErr.message.includes('busy'));
 
+    // 5. Network AbortError / NS_BINDING_ABORTED handling
+    global.fetch = async () => {
+      const err = new Error('The operation was aborted');
+      err.name = 'AbortError';
+      throw err;
+    };
+    let caughtAbortErr = null;
+    try {
+      await AiGenerator.generateWithCustomApi('openrouter', 'test-key', 'prompt');
+    } catch (e) {
+      caughtAbortErr = e;
+    }
+    assert.ok(caughtAbortErr, 'Should catch AbortError');
+    assert.ok(caughtAbortErr.message.includes('timed out or was aborted'), 'Message should describe timeout or abort');
+
+    // 6. Verification of OpenRouter Anti-Reasoning payload flags
+    let capturedBody = null;
+    let capturedHeaders = null;
+    global.fetch = async (url, opts) => {
+      capturedBody = JSON.parse(opts.body);
+      capturedHeaders = opts.headers;
+      return {
+        ok: true,
+        json: async () => ({
+          choices: [{ message: { content: '1. FastLaunch.io\n2. ScoutApp.ai' } }]
+        })
+      };
+    };
+    await AiGenerator.generateWithCustomApi('openrouter', 'test-key', 'fast launch');
+    assert.strictEqual(capturedBody.include_reasoning, false, 'Should disable reasoning to speed up response');
+    assert.strictEqual(capturedBody.reasoning?.effort, 'low', 'Should set reasoning effort to low');
+    assert.strictEqual(capturedBody.reasoning?.max_tokens, undefined, 'Should not specify max_tokens when effort is specified');
+    assert.strictEqual(capturedHeaders['X-Title'], 'Domain Scout AI', 'Should include X-Title');
+    assert.strictEqual(capturedHeaders['HTTP-Referer'], undefined, 'Should omit HTTP-Referer to avoid Firefox header conflicts');
+
+    // 7. Resilient Round-1 Fallback in huntAvailableDomains
+    global.fetch = async () => {
+      const err = new Error('NetworkError when attempting to fetch resource');
+      err.name = 'TypeError';
+      throw err;
+    };
+
+    const fallbackResult = await AiGenerator.huntAvailableDomains({
+      prompt: 'dev platform',
+      defaultTlds: ['com', 'io'],
+      provider: 'openrouter',
+      apiKey: 'test-key',
+      targetAvailableCount: 3,
+      domainCheckerInstance: {
+        parseDomainPayload: (txt, tlds) => DomainChecker.parseDomainPayload(txt, tlds),
+        checkDomains: async (txt, tlds) => {
+          return [
+            { domain: 'devsync.com', name: 'devsync', tld: 'com', isAvailable: true, isRegistered: false },
+            { domain: 'devforge.io', name: 'devforge', tld: 'io', isAvailable: true, isRegistered: false },
+            { domain: 'devcloud.com', name: 'devcloud', tld: 'com', isAvailable: true, isRegistered: false }
+          ];
+        }
+      }
+    });
+
+    assert.strictEqual(fallbackResult.engine, 'smart_brain', 'Should fallback to smart_brain');
+    assert.ok(fallbackResult.fallbackWarning, 'Should have fallbackWarning populated');
+    assert.ok(fallbackResult.fallbackWarning.includes('OpenRouter error'), 'Warning should mention OpenRouter error');
+    assert.ok(fallbackResult.availableDomains.length > 0, 'Should produce available domains');
+
   } finally {
     global.fetch = originalFetch;
   }
-  console.log('✓ Passed OpenRouter Response Extraction & Fallback tests');
+  console.log('✓ Passed OpenRouter Response Extraction & Error Handling tests');
 }
 
 // Test 13: Semantic Smart Brain Quality on Real-World User Queries
@@ -310,10 +397,221 @@ function testSmartBrainSemanticQuality() {
 }
 testSmartBrainSemanticQuality();
 
+// Test 14: Reasoning Output Immunity & Conversational Prose Filtering
+console.log('\nTest 14: Reasoning Output Immunity & Conversational Prose Filtering');
+function testReasoningImmunity() {
+  // Test sentence fragments reject
+  assert.strictEqual(DomainChecker.cleanDomainInput('First, the user wants a plain numbered list of 15 domain name ideas.'), '');
+  assert.strictEqual(DomainChecker.cleanDomainInput('and brandable names.'), '');
+  assert.strictEqual(DomainChecker.cleanDomainInput('The concept is a "product hunt alternative".'), '');
+  assert.strictEqual(DomainChecker.cleanDomainInput('so this alternative should be similar but distinct.'), '');
+  assert.strictEqual(DomainChecker.cleanDomainInput('Ideas:'), '');
+  assert.strictEqual(DomainChecker.cleanDomainInput('Requirements: Short (4-12 characters), memorable, brandable.'), '');
+
+  // Exact user reasoning trace from dots-studio/dots-3-note-preview
+  const userReasoningTrace = `First, the user wants a plain numbered list of 15 domain name ideas. No explanations, no filler, just the list.
+
+The concept is a "product hunt alternative". Product Hunt is a platform for discovering new products, so this alternative should be similar but distinct. I need to think of creative, modern, short, and brandable names.
+
+Requirements: Short (4-12 characters), memorable, brandable. So, I should aim for names that are catchy, easy to remember, and sound like a brand.
+
+Domain names should be .com or similar, but since it's just the domain name, I'll assume they're available or creative ideas. I don't need to check availability, just generate ideas.
+
+Brainstorming keywords related to product hunt: discover, find, hunt, product, new, launch, tech, startup, etc. But I need to make it alternative, so maybe synonyms or twists.
+
+Think of words like: find, seek, hunt, discover, explore, launch, reveal, spark, ignite, etc.
+
+Combine with product-related terms: prod, item, thing, gadget, etc.
+
+But keep it short and brandable. Maybe use made-up words or clever combinations.
+
+List out some ideas:
+
+1. FindHunt – but might be too similar to Product Hunt.
+
+2. DiscoverAlt – but might not be brandable.
+
+I need 15 unique ideas.
+
+Consider modern, techy names: often use -ly, -io, -er, or short punchy words.
+
+Examples: Product Hunt is two words, but domain might be like producthunt.com. For alternative, maybe something like:
+
+- ProdSeek
+
+- HuntAlt
+
+But need to be creative.
+
+Think of verbs: Seek, Find, Hunt, Explore, Discover.
+
+Nouns: Product, Item, Launch, Spark.
+
+Combine: SeekProd, FindLaunch, etc.
+
+But ensure it's short: 4-12 characters. So, names like "Seekr" or "Huntlr" might work.
+
+Brandable: should sound like a company name, e.g., Google, Apple, etc. So, perhaps use invented words.
+
+Ideas:
+
+1. Prodhunt – but too close to Product Hunt.
+
+2. AltHunt – similar.
+
+Maybe avoid direct references.
+
+Use abstract terms: Nova, Spark, Ignite, etc.
+
+For example:
+
+- NovaFind
+
+- SparkSeek
+
+But keep it short.
+
+Aim for 4-12 characters. So, single words or two short words.
+
+Domain names often are one word or hyphenated, but for brandable, better without hyphens if possible.
+
+List potential names:
+
+1. Seekr – sounds like seeker, for finding products.
+
+2. Huntlr – like hunter, but for products.
+
+3. Prodify – product + ify, but might not fit.
+
+4. DiscoverX – discover with X, modern.
+
+5. AltProd – alternative product.
+
+6. NewHunt – new product hunt.
+
+7. LaunchPad – but might be taken, and longer.
+
+8. SparkFind – spark + find.
+
+9. IgniteHunt – ignite + hunt.
+
+10. ExploreAlt – explore alternative.
+
+11. Findr – similar to finder.
+
+12. Seekr – again.
+
+13. ProdSeek – product seek.
+
+14. HuntAlt – hunt alternative.
+
+15. NovaLaunch – nova + launch.
+
+But need to check character count.
+
+Character count: each name should be between 4 and 12 characters.
+
+For example, "Seekr" is 5 characters, good.
+
+"Huntlr" is 6, good.
+
+"Prodify" is 7, good.
+
+"DiscoverX" is 9, good.
+
+"AltProd" is 7, good.
+
+"NewHunt" is 7, good.
+
+"LaunchPad" is 9, but might be two words, but as domain, it's fine.
+
+I need 15.
+
+Brainstorm more:
+
+- Findly – find + ly, like friendly.
+
+- Seeko – seek + o, short.
+
+- Prodio – product + io, modern.
+
+- Huntio – hunt + io.
+
+- Altio – alternative + io.
+
+- NovaFind – but 8 characters.
+
+- Sparkr – spark + r.
+
+- Ignitr – ignite + r, but might be misspelled.
+
+- ExploreX – explore + X.
+
+- Discoverr – discover + r.
+
+- Prodhunt – but 7 characters, similar to product hunt.
+
+To avoid similarity, use different roots.
+
+Think of words like: reveal, expose, unveil, but for products.
+
+- Revealr
+
+- Unveilr
+
+But might not be brandable.
+
+Use techy suffixes: -ly, -io, -er, -r.
+
+For example: Findio, Seekio, Hunt`;
+
+  const parsed = DomainChecker.parseDomainPayload(userReasoningTrace, ['com']);
+  const parsedNames = parsed.map(p => p.name);
+
+  // Assert genuine ideas are extracted
+  assert.ok(parsedNames.includes('seekr'));
+  assert.ok(parsedNames.includes('huntlr'));
+  assert.ok(parsedNames.includes('prodify'));
+  assert.ok(parsedNames.includes('discoverx'));
+  assert.ok(parsedNames.includes('altprod'));
+  assert.ok(parsedNames.includes('newhunt'));
+  assert.ok(parsedNames.includes('launchpad'));
+  assert.ok(parsedNames.includes('sparkfind'));
+  assert.ok(parsedNames.includes('ignitehunt'));
+  assert.ok(parsedNames.includes('explorealt'));
+  assert.ok(parsedNames.includes('findr'));
+  assert.ok(parsedNames.includes('prodseek'));
+  assert.ok(parsedNames.includes('huntalt'));
+  assert.ok(parsedNames.includes('novalaunch'));
+
+  // CRITICAL: Assert NO conversational sentence names or concatenated sentences are present
+  const badSentences = parsedNames.filter(name => 
+    name.includes('theuser') ||
+    name.includes('plainnumbered') ||
+    name.includes('theconcept') ||
+    name.includes('sothisalternative') ||
+    name.includes('andbrandable') ||
+    name.includes('producthuntisaplatform') ||
+    name.includes('requirements') ||
+    name.includes('brainstorming') ||
+    name.length > 25
+  );
+
+  assert.strictEqual(
+    badSentences.length,
+    0,
+    `Found invalid prose domain names in parsed output: ${badSentences.join(', ')}`
+  );
+
+  console.log('✓ Passed Reasoning Output Immunity & Conversational Prose Filtering tests');
+}
+testReasoningImmunity();
+
 Promise.all([testReiterationLoop(), testOpenRouterParsing()]).then(() => {
-  console.log('\n🎉 ALL 13 TEST SUITES PASSED SUCCESSFULLY!');
+  console.log('\n🎉 ALL 14 TEST SUITES PASSED SUCCESSFULLY!');
 }).catch(err => {
   console.error('\n❌ Test failed:', err);
   process.exit(1);
 });
+
 

@@ -316,14 +316,18 @@ document.addEventListener('DOMContentLoaded', () => {
     aiModelStatus.textContent = 'Fetching models...';
     if (btnRefreshModels) btnRefreshModels.disabled = true;
 
+    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timeoutId = controller ? setTimeout(() => controller.abort(), 10000) : null;
+
     try {
       const res = await fetch('https://openrouter.ai/api/v1/models', {
         headers: {
           'Accept': 'application/json',
-          'HTTP-Referer': 'https://github.com/domain-scout',
           'X-Title': 'Domain Scout AI'
-        }
+        },
+        signal: controller ? controller.signal : undefined
       });
+      if (timeoutId) clearTimeout(timeoutId);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
 
@@ -951,7 +955,9 @@ document.addEventListener('DOMContentLoaded', () => {
       renderResults();
       persistState();
 
-      if (huntResult.availableCount > 0) {
+      if (huntResult.fallbackWarning) {
+        showToast(`⚠️ ${huntResult.fallbackWarning}`, 4000);
+      } else if (huntResult.availableCount > 0) {
         showToast(`🎉 Found ${huntResult.availableCount} available domain${huntResult.availableCount > 1 ? 's' : ''} in ${huntResult.rounds} round${huntResult.rounds > 1 ? 's' : ''}!`);
       } else {
         showToast(`Check complete across ${huntResult.rounds} rounds. No available domains found.`);

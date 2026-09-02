@@ -599,15 +599,30 @@ Please suggest ${count} BRAND NEW, DIFFERENT domain name ideas for "${prompt}".
 
     const fullPrompt = buildPromptWithExclusions(promptText, exclusions, 15);
 
+    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timeoutId = controller ? setTimeout(() => controller.abort(), 25000) : null;
+
     if (provider === 'gemini') {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey.trim()}`;
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: fullPrompt }] }]
-        })
-      });
+      let res;
+      try {
+        res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller ? controller.signal : undefined,
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: fullPrompt }] }]
+          })
+        });
+      } catch (fetchErr) {
+        if (timeoutId) clearTimeout(timeoutId);
+        if (fetchErr.name === 'AbortError' || fetchErr.message?.includes('aborted')) {
+          throw new Error(`Gemini request timed out or was aborted. Please check your connection or try again.`);
+        }
+        throw new Error(`Network error connecting to Gemini: ${fetchErr.message || 'Request failed'}`);
+      } finally {
+        if (timeoutId) clearTimeout(timeoutId);
+      }
 
       if (!res.ok) {
         const errJson = await res.json().catch(() => ({}));
@@ -629,40 +644,59 @@ Please suggest ${count} BRAND NEW, DIFFERENT domain name ideas for "${prompt}".
       'Authorization': `Bearer ${apiKey.trim()}`
     };
 
+    const requestBody = {
+      model,
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a professional startup naming expert. Return ONLY a plain numbered list of creative, brandable domain name ideas. Do NOT include reasoning, explanations, conversational filler, or intro text.'
+        },
+        {
+          role: 'user',
+          content: fullPrompt
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 2000
+    };
+
     if (provider === 'groq') {
       endpoint = 'https://api.groq.com/openai/v1/chat/completions';
       model = 'llama-3.3-70b-versatile';
+      requestBody.model = model;
     } else if (provider === 'openrouter') {
       endpoint = 'https://openrouter.ai/api/v1/chat/completions';
       model = 'openrouter/free';
-      headers['HTTP-Referer'] = 'https://github.com/domain-scout';
       headers['X-Title'] = 'Domain Scout AI';
+      requestBody.model = model;
+      // Disable/minimize reasoning for reasoning-heavy free models on OpenRouter
+      requestBody.include_reasoning = false;
+      requestBody.reasoning = { effort: 'low' };
     }
 
     // Allow caller to override the model (e.g. user-selected free model for OpenRouter)
     if (modelOverride && modelOverride.trim()) {
       model = modelOverride.trim();
+      requestBody.model = model;
     }
 
-    const res = await fetch(endpoint, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        model,
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a professional startup naming expert. Return ONLY a plain numbered list of creative, brandable domain name ideas. Do NOT include reasoning, explanations, conversational filler, or intro text.'
-          },
-          {
-            role: 'user',
-            content: fullPrompt
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 1000
-      })
-    });
+    let res;
+    try {
+      res = await fetch(endpoint, {
+        method: 'POST',
+        headers,
+        signal: controller ? controller.signal : undefined,
+        body: JSON.stringify(requestBody)
+      });
+    } catch (fetchErr) {
+      if (timeoutId) clearTimeout(timeoutId);
+      if (fetchErr.name === 'AbortError' || fetchErr.message?.includes('aborted')) {
+        throw new Error(`${provider.toUpperCase()} request timed out or was aborted. Please check your connection or switch to another model.`);
+      }
+      throw new Error(`Network error connecting to ${provider.toUpperCase()}: ${fetchErr.message || 'Request failed'}`);
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+    }
 
     if (!res.ok) {
       const errJson = await res.json().catch(() => ({}));
@@ -673,18 +707,19 @@ Please suggest ${count} BRAND NEW, DIFFERENT domain name ideas for "${prompt}".
     const choice = data.choices?.[0];
     let content = choice?.message?.content || choice?.text || '';
 
-    // Handle models that store response in reasoning / reasoning_details
-    if (!content && choice?.message?.reasoning) {
-      content = choice.message.reasoning;
-    }
-    if (!content && choice?.message?.reasoning_details && Array.isArray(choice.message.reasoning_details)) {
-      content = choice.message.reasoning_details.map(d => d.text || '').filter(Boolean).join('\n');
-    }
     if (!content && typeof choice?.message === 'string') {
       content = choice.message;
     }
 
+    // Strip <think>...</think> tags if model output includes inline reasoning blocks
+    if (typeof content === 'string') {
+      content = content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+    }
+
     if (!content || !content.trim()) {
+      if (choice?.finish_reason === 'length') {
+        throw new Error(`${provider.toUpperCase()} model (${model}) ran out of tokens during reasoning. Please select another model (e.g. Auto Router) or try again.`);
+      }
       throw new Error(`${provider.toUpperCase()} model (${model}) returned an empty response. Try selecting another model (e.g., Auto Free Router).`);
     }
 
@@ -796,6 +831,7 @@ Please suggest ${count} BRAND NEW, DIFFERENT domain name ideas for "${prompt}".
 
     let round = 1;
     let resolvedEngine = provider || 'smart_brain';
+    let fallbackWarning = null;
 
     while (round <= maxRounds) {
       const currentAvailableCount = Array.from(accumulatedResultsMap.values()).filter(r => r.isAvailable).length;
@@ -832,15 +868,16 @@ Please suggest ${count} BRAND NEW, DIFFERENT domain name ideas for "${prompt}".
           resolvedEngine = genResult.engine;
         }
       } catch (err) {
-        // On round 1, surface the external provider error to the user (e.g. invalid key, model busy)
-        if (round === 1) {
-          throw err;
-        }
-        // If external provider fails on subsequent rounds, seamlessly fallback to Smart Brain
+        // If external cloud provider fails (e.g. invalid key, timeout, aborted, busy model),
+        // seamlessly fallback to Smart Brain so the user is never stuck and always gets domain ideas
         if (provider !== 'smart_brain') {
+          console.warn(`Provider ${provider} failed on round ${round}: ${err.message}. Falling back to Smart Brain.`);
           const names = generateWithSmartBrain(prompt, takenBaseNames, 15);
           aiRawOutput = names.map((n, idx) => `${idx + 1}. **${n}**`).join('\n');
           resolvedEngine = 'smart_brain';
+          if (!fallbackWarning) {
+            fallbackWarning = `${getEngineDisplayName(provider)} error: ${err.message || 'Request failed'}. Switched to Smart Brain.`;
+          }
         } else {
           throw err;
         }
@@ -928,7 +965,8 @@ Please suggest ${count} BRAND NEW, DIFFERENT domain name ideas for "${prompt}".
       availableCount: availableDomains.length,
       prompt,
       engine: resolvedEngine,
-      engineName: getEngineDisplayName(resolvedEngine)
+      engineName: getEngineDisplayName(resolvedEngine),
+      fallbackWarning
     };
   }
 

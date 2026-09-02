@@ -89,7 +89,37 @@
   }
 
   /**
-   * Check if a line is conversational fluff, markdown headers, or divider to ignore
+   * English grammatical stop words and reasoning words used to detect sentences/paragraphs
+   */
+  const ENGLISH_SENTENCE_STOP_WORDS = new Set([
+    'the', 'a', 'an', 'and', 'or', 'but', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
+    'to', 'of', 'in', 'for', 'on', 'with', 'at', 'by', 'from', 'as', 'into', 'like',
+    'through', 'after', 'over', 'between', 'out', 'against', 'during', 'without', 'before',
+    'under', 'around', 'among', 'it', 'its', 'this', 'that', 'these', 'those', 'so', 'such',
+    'no', 'not', 'only', 'own', 'same', 'than', 'too', 'very', 'can', 'will', 'just',
+    'should', 'would', 'could', 'might', 'must', 'shall', 'now', 'each', 'few', 'more',
+    'most', 'other', 'some', 'what', 'which', 'who', 'whom',
+    'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours',
+    'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'they', 'them', 'their',
+    'theirs', 'want', 'wants', 'wanted', 'need', 'needs', 'needed', 'think', 'thinks',
+    'aim', 'aims', 'avoid', 'avoids', 'ensure', 'ensures', 'similar', 'distinct', 'different',
+    'alternative', 'alternatives', 'brandable', 'memorable', 'creative', 'explanations',
+    'filler', 'list', 'first', 'second', 'third', 'finally', 'overall', 'example', 'examples'
+  ]);
+
+  /**
+   * Standalone noise words to ignore if entered as solitary base names
+   */
+  const SINGLE_NOISE_WORDS = new Set([
+    'https', 'http', 'www', 'domain', 'domains', 'com', 'net', 'org', 'io', 'ai', 'co', 'app', 'dev',
+    'url', 'name', 'names', 'idea', 'ideas', 'option', 'options', 'example', 'examples',
+    'suggestion', 'suggestions', 'candidate', 'candidates', 'result', 'results', 'total',
+    'brand', 'brands', 'note', 'notes', 'summary', 'keyword', 'keywords', 'requirements',
+    'category', 'categories', 'item', 'items', 'prompt', 'concept', 'concepts'
+  ]);
+
+  /**
+   * Check if a line is conversational fluff, markdown headers, reasoning, or divider to ignore
    * @param {string} line
    * @returns {boolean}
    */
@@ -106,10 +136,25 @@
     // Markdown code blocks (``` or ~~~)
     if (/^(`{3,}|~{3,})/.test(trimmed)) return true;
 
-    // Conversational filler lines from ChatGPT / LLMs
-    const conversationalRegex = /^(?:here\s+(?:are|is)|sure|certainly|below\s+(?:are|is)|let\s+me\s+know|hope\s+this|these\s+are|prompt:|category:|suggestions?:|options?:|ideas?:|note:|feel\s+free\s+to|what\s+do\s+you\s+think|which\s+one\s+do\s+you\s+prefer)\b/i;
-    if (conversationalRegex.test(trimmed) && trimmed.length > 15) {
+    // Standalone section headers / meta-tags (e.g. "Ideas:", "Requirements:", "Notes:", "Brainstorming:")
+    if (/^(?:ideas?|notes?|suggestions?|names?|keywords?|category|domains?|explanation|rationale|analysis|summary|examples?|options?|requirements?|considerations?|brainstorming|conclusion|character count|root words?|techy suffixes?|potential names?):?\s*$/i.test(trimmed)) {
       return true;
+    }
+
+    // Conversational & reasoning starter lines from LLMs
+    const conversationalRegex = /^(?:here\s+(?:are|is)|sure|certainly|below\s+(?:are|is)|let\s+me\s+know|hope\s+this|these\s+are|prompt:|category:|suggestions?:|options?:|ideas?:|note:|notes:|feel\s+free\s+to|what\s+do\s+you\s+think|which\s+one\s+do\s+you\s+prefer|first,?|second,?|third,?|finally,?|next,?|overall,?|in summary,?|to begin,?|let's|let us|the user|i need to|i should|i will|i'll|i'd|we need to|we can|as an ai|based on|requirements?:|brainstorming|consider|examples?:|combine with|think of|aim for|character count|avoid|root words?|techy suffixes?|potential names?:|so,? (?:this|these|i|we)|for example:?|but (?:need|ensure|keep|might)|to avoid)\b/i;
+    if (conversationalRegex.test(trimmed)) {
+      return true;
+    }
+
+    // Lines that are conversational prose (4+ space-separated words without list number/bullet, description separator, table separator or tab)
+    const words = trimmed.split(/\s+/);
+    if (words.length >= 4) {
+      const hasBulletOrNum = /^#?\d+(?:[\.\)\:\-]|\s+)|^[•▪▫→➢✓✔✅⚡💡🚀🔥🎯⭐️📌💎🔹+\-*]/.test(trimmed);
+      const hasSeparator = /[\u2014\u2013\u2015—–―]|\s+-\s+|\s*[:|]\s+|\s*(?:->|=>|→|↦)\s*|\s*=\s+|\s*\/\/\s*|\t/.test(trimmed);
+      if (!hasBulletOrNum && !hasSeparator && !trimmed.includes('|') && !trimmed.includes('\t')) {
+        return true;
+      }
     }
 
     return false;
@@ -165,16 +210,59 @@
     // 8. Strip parenthetical / bracket explanations: "(...)", "[...]", "{...}"
     text = text.replace(/[\(\[\{][^\)\]\}]*[\)\]\}]/g, '');
 
+    // Clean wrapping quotes/markdown again if exposed
+    text = text.replace(/^[`"'\u201c\u201d\u2018\u2019*_\s]+/, '').replace(/[`"'\u201c\u201d\u2018\u2019*_\s]+$/, '');
+    text = text.trim();
+
+    if (!text) return '';
+
+    // Check for prose: if the remaining text has multiple space-separated words
+    const words = text.split(/\s+/).filter(Boolean);
+    if (words.length > 3) {
+      // More than 3 words without delimiter is a sentence, not a domain idea
+      return '';
+    }
+
+    // If multi-word (2 or 3 words), check for English grammatical stop words
+    if (words.length > 1) {
+      for (const w of words) {
+        const cleanW = w.toLowerCase().replace(/[^a-z]/g, '');
+        if (ENGLISH_SENTENCE_STOP_WORDS.has(cleanW)) {
+          return ''; // Contains English stop word (e.g. "and brandable names", "the user wants")
+        }
+      }
+    }
+
     // 9. Normalize domain text
-    text = text.trim().toLowerCase();
+    text = text.toLowerCase();
     text = text.replace(/^https?:\/\//i, '');
     text = text.replace(/^www\./i, '');
     text = text.split('/')[0].split('?')[0].split('#')[0];
     text = text.split(':')[0];
+
+    // Strip trailing punctuation like periods or commas that are sentence endings
+    text = text.replace(/[.,;:!?]+$/, '');
+
+    // Remove invalid domain characters (allow letters, numbers, hyphens, and dots)
     text = text.replace(/[^a-z0-9.-]/g, '');
 
     // Strip leading/trailing dots or hyphens
     text = text.replace(/^[-.]+|[-.]+$/g, '');
+
+    // If result has no dot and is longer than 30 chars or shorter than 2 chars, it is not a valid brandable name
+    if (!text.includes('.')) {
+      if (text.length < 2 || text.length > 30 || SINGLE_NOISE_WORDS.has(text)) {
+        return '';
+      }
+    }
+
+    // If result has a dot, validate that the base part is <= 30 chars, total length <= 45, and not a solitary noise word
+    if (text.includes('.')) {
+      const parts = text.split('.');
+      if (parts[0].length < 2 || parts[0].length > 30 || text.length > 45 || SINGLE_NOISE_WORDS.has(parts[0])) {
+        return '';
+      }
+    }
 
     return text.trim();
   }
@@ -394,7 +482,7 @@
       if (!token) continue;
 
       // Filter out obvious noise words if no dot (e.g. "com", "io", "http", "domain")
-      if (!token.includes('.') && /^(https?|www|domain|domains|com|net|org|io|ai)$/i.test(token)) {
+      if (!token.includes('.') && SINGLE_NOISE_WORDS.has(token.toLowerCase())) {
         continue;
       }
 
@@ -405,6 +493,11 @@
         const specificTld = token.substring(dotIndex + 1);
 
         if (!baseName || !specificTld) continue;
+
+        // Validate baseName and specificTld
+        if (!/^[a-z0-9](?:[a-z0-9-]{0,28}[a-z0-9])?$/i.test(baseName)) continue;
+        if (!isTld(specificTld)) continue;
+        if (SINGLE_NOISE_WORDS.has(baseName.toLowerCase())) continue;
 
         if (!grouped.has(baseName)) {
           grouped.set(baseName, {
@@ -419,6 +512,10 @@
         const baseName = token;
         if (!baseName) continue;
 
+        // Validate baseName format & length (2 to 30 alphanumeric/hyphen chars)
+        if (!/^[a-z0-9](?:[a-z0-9-]{0,28}[a-z0-9])?$/i.test(baseName)) continue;
+        if (SINGLE_NOISE_WORDS.has(baseName.toLowerCase())) continue;
+
         if (!grouped.has(baseName)) {
           grouped.set(baseName, {
             name: baseName,
@@ -430,12 +527,16 @@
         // If item has explicit TLDs (from parenthetical or table)
         if (item.tlds && Array.isArray(item.tlds) && item.tlds.length > 0) {
           for (const tld of item.tlds) {
-            grouped.get(baseName).tlds.add(tld);
+            if (isTld(tld)) {
+              grouped.get(baseName).tlds.add(tld);
+            }
           }
         } else {
           // Fallback to user's preferred default TLDs
           for (const tld of normalizedDefaultTlds) {
-            grouped.get(baseName).tlds.add(tld);
+            if (isTld(tld)) {
+              grouped.get(baseName).tlds.add(tld);
+            }
           }
         }
       }
@@ -459,16 +560,29 @@
     const payload = { names: batch };
     const url = 'https://cloud.instantdomainsearch.com/services/bulk-check';
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Origin': 'https://instantdomainsearch.com',
-        'Referer': 'https://instantdomainsearch.com/'
-      },
-      body: JSON.stringify(payload)
-    });
+    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timeoutId = controller ? setTimeout(() => controller.abort(), 15000) : null;
+
+    let response;
+    try {
+      response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        signal: controller ? controller.signal : undefined,
+        body: JSON.stringify(payload)
+      });
+    } catch (fetchErr) {
+      if (timeoutId) clearTimeout(timeoutId);
+      if (fetchErr.name === 'AbortError' || fetchErr.message?.includes('aborted')) {
+        throw new Error(`Domain check timed out. Please check your internet connection.`);
+      }
+      throw new Error(`Domain check failed: ${fetchErr.message || 'Network error'}`);
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+    }
 
     if (!response.ok) {
       throw new Error(`API returned HTTP status ${response.status}: ${response.statusText}`);
