@@ -69,14 +69,19 @@ Domain Scout does not collect personal data, track browsing history, or require 
 Search and check domain name availability, TLD options, and aftermarket status in real time.
 ```
 
-### Host Permissions Justification (`https://cloud.instantdomainsearch.com/*`)
+### Host Permissions Justification (`https://cloud.instantdomainsearch.com/*`, `https://chatgpt.com/*`)
 ```
-Required to query real-time domain availability, registration status, and aftermarket marketplace pricing via the InstantDomainSearch bulk check API.
+Required to query real-time domain availability and marketplace pricing via the InstantDomainSearch API, and to communicate with ChatGPT for generating domain suggestions in AI Scout mode.
 ```
 
 ### Storage Permission Justification (`storage`)
 ```
 Used strictly on the client side to remember user input, selected TLD preferences, and starred domain bookmarks across browser sessions.
+```
+
+### Cookies Permission Justification (`cookies`)
+```
+Used strictly client-side to verify active session authentication on chatgpt.com so users can generate domain name ideas in AI Scout mode without needing external API keys. Cookies are never collected, logged, or transferred.
 ```
 
 ### User Data Collection
