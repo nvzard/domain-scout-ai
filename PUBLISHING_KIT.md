@@ -106,7 +106,7 @@ All promo assets and screenshots have been generated in [`store-assets/`](file:/
 | **Screenshot 1** | 1280 x 800 px | `screenshot-1-search-input.jpg` | Brainstorm Domain Names Fast with AI |
 | **Screenshot 2** | 1280 x 800 px | `screenshot-2-results-overview.jpg` | 10 Available Found — Autonomous Multi-Round Hunt |
 | **Screenshot 3** | 1280 x 800 px | `screenshot-3-registrars-continue.jpg` | Manual Bulk Search — ChatGPT Lists & Variations |
-| **Screenshot 4** | 1280 x 800 px | `screenshot-4-aftermarket-pricing.jpg` | 1-Click Registrar Comparison & Purchase |
+| **Screenshot 4** | 1280 x 800 px | `screenshot-4-aftermarket-pricing.jpg` | Compare Available, Taken & Marketplace Domains |
 | **Screenshot 5** | 1280 x 800 px | `screenshot-5-favorites-export.jpg` | Starred Shortlists, Aftermarket Pricing & Reports |
 | **Extension Icon** | 128 x 128 px | `src/icons/icon-128.png` | Store Listing App Icon |
 

@@ -111,7 +111,11 @@ def render_real_popup_state(state_config, output_png, window_height=640):
         with open(html_path, "r", encoding="utf-8") as f:
             html = f.read()
             
+        custom_css = state_config.get("customCss", "")
+        style_inject = f"<style>{custom_css}</style>" if custom_css else ""
+        
         script_code = f"""
+        {style_inject}
         <script>
           // Pre-populate real storage state
           localStorage.setItem('dc_currentMode', JSON.stringify({json.dumps(state_config.get('currentMode', 'ai'))}));
@@ -162,6 +166,57 @@ def render_real_popup_state(state_config, output_png, window_height=640):
 # Real Screenshot Configurations (5 States)
 # ---------------------------------------------------------
 
+RESULTS_SAMPLE_SCREENSHOT_4 = [
+    {"domain": "snaphunt.co", "name": "snaphunt", "tld": "co", "isAvailable": False, "isRegistered": True, "isAftermarket": False},
+    {"domain": "prodmingle.com", "name": "prodmingle", "tld": "com", "isAvailable": True, "isRegistered": False, "isAftermarket": False},
+    {"domain": "prodmingle.ai", "name": "prodmingle", "tld": "ai", "isAvailable": True, "isRegistered": False, "isAftermarket": False},
+    {"domain": "prodmingle.io", "name": "prodmingle", "tld": "io", "isAvailable": True, "isRegistered": False, "isAftermarket": False},
+    {"domain": "questnest.com", "name": "questnest", "tld": "com", "isAvailable": False, "isRegistered": True, "isAftermarket": True, "marketPrice": 2997, "marketName": "Afternic"},
+    {"domain": "launchhive.ai", "name": "launchhive", "tld": "ai", "isAvailable": True, "isRegistered": False, "isAftermarket": False},
+    {"domain": "productnest.dev", "name": "productnest", "tld": "dev", "isAvailable": True, "isRegistered": False, "isAftermarket": False},
+    {"domain": "huntforge.io", "name": "huntforge", "tld": "io", "isAvailable": True, "isRegistered": False, "isAftermarket": False},
+    {"domain": "scoutcraft.ai", "name": "scoutcraft", "tld": "ai", "isAvailable": True, "isRegistered": False, "isAftermarket": False},
+    {"domain": "makerspot.app", "name": "makerspot", "tld": "app", "isAvailable": True, "isRegistered": False, "isAftermarket": False},
+    {"domain": "founderfeed.io", "name": "founderfeed", "tld": "io", "isAvailable": True, "isRegistered": False, "isAftermarket": False},
+    {"domain": "techscout.co", "name": "techscout", "tld": "co", "isAvailable": True, "isRegistered": False, "isAftermarket": False},
+    {"domain": "launchpulse.dev", "name": "launchpulse", "tld": "dev", "isAvailable": True, "isRegistered": False, "isAftermarket": False},
+    {"domain": "makerbase.io", "name": "makerbase", "tld": "io", "isAvailable": True, "isRegistered": False, "isAftermarket": False},
+    {"domain": "buildhunt.ai", "name": "buildhunt", "tld": "ai", "isAvailable": True, "isRegistered": False, "isAftermarket": False},
+    {"domain": "launchgrid.co", "name": "launchgrid", "tld": "co", "isAvailable": True, "isRegistered": False, "isAftermarket": False},
+    {"domain": "indiespot.dev", "name": "indiespot", "tld": "dev", "isAvailable": True, "isRegistered": False, "isAftermarket": False},
+    {"domain": "shipflow.ai", "name": "shipflow", "tld": "ai", "isAvailable": True, "isRegistered": False, "isAftermarket": False},
+    {"domain": "appscout.io", "name": "appscout", "tld": "io", "isAvailable": True, "isRegistered": False, "isAftermarket": False},
+    {"domain": "curatehub.co", "name": "curatehub", "tld": "co", "isAvailable": True, "isRegistered": False, "isAftermarket": False},
+    {"domain": "launchvibe.app", "name": "launchvibe", "tld": "app", "isAvailable": True, "isRegistered": False, "isAftermarket": False},
+    {"domain": "buildwave.ai", "name": "buildwave", "tld": "ai", "isAvailable": True, "isRegistered": False, "isAftermarket": False},
+    {"domain": "makerhive.io", "name": "makerhive", "tld": "io", "isAvailable": True, "isRegistered": False, "isAftermarket": False},
+    {"domain": "venturestack.dev", "name": "venturestack", "tld": "dev", "isAvailable": True, "isRegistered": False, "isAftermarket": False},
+    {"domain": "shipradar.ai", "name": "shipradar", "tld": "ai", "isAvailable": True, "isRegistered": False, "isAftermarket": False},
+    {"domain": "prodhunt.co", "name": "prodhunt", "tld": "co", "isAvailable": True, "isRegistered": False, "isAftermarket": False},
+    {"domain": "indielaunch.org", "name": "indielaunch", "tld": "org", "isAvailable": True, "isRegistered": False, "isAftermarket": False},
+    {"domain": "indieflow.app", "name": "indieflow", "tld": "app", "isAvailable": True, "isRegistered": False, "isAftermarket": False},
+    {"domain": "producthunt.io", "name": "producthunt", "tld": "io", "isAvailable": False, "isRegistered": True, "isAftermarket": True, "marketPrice": 4500, "marketName": "Sedo"},
+    {"domain": "launchpad.ai", "name": "launchpad", "tld": "ai", "isAvailable": False, "isRegistered": True, "isAftermarket": True, "marketPrice": 12500, "marketName": "Afternic"},
+    {"domain": "makerhub.com", "name": "makerhub", "tld": "com", "isAvailable": False, "isRegistered": True, "isAftermarket": True, "marketPrice": 3200, "marketName": "Afternic"},
+    {"domain": "techhunt.com", "name": "techhunt", "tld": "com", "isAvailable": False, "isRegistered": True, "isAftermarket": True, "marketPrice": 1800, "marketName": "Dan"},
+    {"domain": "indiehunt.io", "name": "indiehunt", "tld": "io", "isAvailable": False, "isRegistered": True, "isAftermarket": True, "marketPrice": 2400, "marketName": "GoDaddy"},
+    {"domain": "producthunt.com", "name": "producthunt", "tld": "com", "isAvailable": False, "isRegistered": True, "isAftermarket": False},
+    {"domain": "producthunt.ai", "name": "producthunt", "tld": "ai", "isAvailable": False, "isRegistered": True, "isAftermarket": False},
+    {"domain": "betalist.com", "name": "betalist", "tld": "com", "isAvailable": False, "isRegistered": True, "isAftermarket": False},
+    {"domain": "betalist.io", "name": "betalist", "tld": "io", "isAvailable": False, "isRegistered": True, "isAftermarket": False},
+    {"domain": "launchingnext.com", "name": "launchingnext", "tld": "com", "isAvailable": False, "isRegistered": True, "isAftermarket": False},
+    {"domain": "indiehackers.com", "name": "indiehackers", "tld": "com", "isAvailable": False, "isRegistered": True, "isAftermarket": False},
+    {"domain": "hackernews.com", "name": "hackernews", "tld": "com", "isAvailable": False, "isRegistered": True, "isAftermarket": False},
+    {"domain": "productstash.io", "name": "productstash", "tld": "io", "isAvailable": False, "isRegistered": True, "isAftermarket": False},
+    {"domain": "alternativeto.net", "name": "alternativeto", "tld": "net", "isAvailable": False, "isRegistered": True, "isAftermarket": False},
+    {"domain": "startupstash.com", "name": "startupstash", "tld": "com", "isAvailable": False, "isRegistered": True, "isAftermarket": False},
+    {"domain": "toolhunt.com", "name": "toolhunt", "tld": "com", "isAvailable": False, "isRegistered": True, "isAftermarket": False},
+    {"domain": "sideprojectors.com", "name": "sideprojectors", "tld": "com", "isAvailable": False, "isRegistered": True, "isAftermarket": False},
+    {"domain": "microlaunch.net", "name": "microlaunch", "tld": "net", "isAvailable": False, "isRegistered": True, "isAftermarket": False},
+    {"domain": "uneed.best", "name": "uneed", "tld": "best", "isAvailable": False, "isRegistered": True, "isAftermarket": False},
+    {"domain": "saashub.com", "name": "saashub", "tld": "com", "isAvailable": False, "isRegistered": True, "isAftermarket": False}
+]
+
 SCREENSHOTS = [
     {
         "config": {
@@ -173,7 +228,7 @@ SCREENSHOTS = [
             "lastAiMeta": None
         },
         "window_height": 550,
-        "tag": "🤖 MULTI-MODEL AI SCOUT",
+        "tag": "MULTI-MODEL AI SCOUT",
         "title": "Brainstorm Domain Names Fast with AI",
         "subtitle": "Describe any product or startup idea — AI brainstorms & auto-hunts available domains",
         "out": "screenshot-1-search-input.jpg"
@@ -197,7 +252,7 @@ SCREENSHOTS = [
             "currentFilter": "available"
         },
         "window_height": 640,
-        "tag": "✨ 10 AVAILABLE FOUND",
+        "tag": "10 AVAILABLE FOUND",
         "title": "Autonomous AI Hunt Across Iterative Rounds",
         "subtitle": "Auto-exclusion loop detects taken names and iterates until 10 available domains are found",
         "out": "screenshot-2-results-overview.jpg"
@@ -211,7 +266,7 @@ SCREENSHOTS = [
             "lastAiMeta": None
         },
         "window_height": 550,
-        "tag": "📋 MANUAL BULK SEARCH",
+        "tag": "MANUAL BULK SEARCH",
         "title": "Paste ChatGPT Lists, Markdown Tables & Notes",
         "subtitle": "Handles raw chat transcripts, parenthetical TLDs, JSON arrays & 1-click startup variations",
         "out": "screenshot-3-registrars-continue.jpg"
@@ -219,16 +274,54 @@ SCREENSHOTS = [
     {
         "config": {
             "currentMode": "ai",
-            "preferredTlds": ["com", "io", "ai"],
-            "lastResults": SAMPLE_RESULTS,
-            "starredDomains": ["agentflow.ai"],
-            "currentFilter": "available",
-            "openRegistrarDropdown": True
+            "aiPrompt": "product hunt alternatives",
+            "aiProvider": "openrouter",
+            "preferredTlds": ["com", "io", "ai", "co", "dev", "app", "org", "net"],
+            "lastAiMeta": {
+                "prompt": "product hunt alternatives",
+                "rounds": 2,
+                "totalChecked": 48,
+                "availableCount": 26,
+                "engine": "openrouter",
+                "engineName": "OpenRouter"
+            },
+            "lastResults": RESULTS_SAMPLE_SCREENSHOT_4,
+            "starredDomains": [],
+            "currentFilter": "all",
+            "customCss": """
+              .app-header, .mode-tabs, #sectionAi, #sectionManual, .preferences-section .section-header, .tld-chips-container, .input-with-btn {
+                display: none !important;
+              }
+              body {
+                padding: 10px 16px 14px 16px !important;
+                margin: 0 !important;
+              }
+              .preferences-section {
+                padding: 0 0 6px 0 !important;
+                margin: 0 0 6px 0 !important;
+                border: none !important;
+                background: transparent !important;
+              }
+              .quick-tlds-wrapper {
+                width: 100% !important;
+              }
+              .results-dashboard {
+                margin-top: 0 !important;
+              }
+              .results-list {
+                max-height: none !important;
+                overflow-y: visible !important;
+              }
+              .domain-item {
+                margin-bottom: 6px !important;
+                padding: 8px 12px !important;
+              }
+            """
         },
-        "window_height": 640,
-        "tag": "🛒 1-CLICK REGISTRARS",
-        "title": "Instant Registrar Comparison & Fast Purchase",
-        "subtitle": "One click to register available domains on GoDaddy, Hostinger, Spaceship or Namecheap",
+        "window_height": 698,
+        "tag": "AVAILABLE • TAKEN • FOR SALE",
+        "title": "Compare Available, Taken & Marketplace Domains",
+        "subtitle": "1-click registration for available names, ICANN/Archive for taken domains & secondary market prices ($)",
         "out": "screenshot-4-aftermarket-pricing.jpg"
     },
     {
@@ -240,7 +333,7 @@ SCREENSHOTS = [
             "currentFilter": "starred"
         },
         "window_height": 640,
-        "tag": "⭐ PRODUCTIVITY SUITE",
+        "tag": "PRODUCTIVITY SUITE",
         "title": "Starred Shortlists, Aftermarket Pricing & Reports",
         "subtitle": "Bookmark favorites, discover secondary market prices ($), and export clean text reports",
         "out": "screenshot-5-favorites-export.jpg"
