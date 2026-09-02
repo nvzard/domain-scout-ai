@@ -13,7 +13,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let searchTerm = '';
   let isChecking = false;
   let starredDomains = new Set();
-  let aiProvider = 'auto';
+  let aiProvider = 'smart_brain';
+  let aiApiKeys = {}; // per-provider key map: { openai: '...', gemini: '...', groq: '...', openrouter: '...' }
+  let aiModelOverride = ''; // selected free model for OpenRouter
   let aiTargetCount = 10;
   let lastAiMeta = null;
 
@@ -28,6 +30,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnClearAiPrompt = document.getElementById('btnClearAiPrompt');
   const inspirationChips = document.getElementById('inspirationChips');
   const aiProviderSelect = document.getElementById('aiProviderSelect');
+  const aiApiKeyRow = document.getElementById('aiApiKeyRow');
+  const aiApiKeyInput = document.getElementById('aiApiKeyInput');
+  const aiApiKeyLabel = document.getElementById('aiApiKeyLabel');
+  const aiApiKeyHelpLink = document.getElementById('aiApiKeyHelpLink');
+  const btnToggleApiKey = document.getElementById('btnToggleApiKey');
+  const eyeIconShow = document.getElementById('eyeIconShow');
+  const eyeIconHide = document.getElementById('eyeIconHide');
+  const aiModelRow = document.getElementById('aiModelRow');
+  const aiModelSelect = document.getElementById('aiModelSelect');
+  const aiModelStatus = document.getElementById('aiModelStatus');
+  const btnRefreshModels = document.getElementById('btnRefreshModels');
   const btnAiGenerate = document.getElementById('btnAiGenerate');
   const btnAiGenerateText = document.getElementById('btnAiGenerateText');
   const aiKeyboardHint = document.getElementById('aiKeyboardHint');
@@ -286,37 +299,125 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Detect if the browser is Chrome-supported and not Firefox
-  function isChromeSupportedBrowser() {
-    if (typeof navigator === 'undefined') return false;
-    const ua = navigator.userAgent.toLowerCase();
-    const isFirefox = ua.includes('firefox') || ua.includes('fxios');
-    if (isFirefox) return false;
-    const isChromium = ua.includes('chrome') || ua.includes('chromium') || ua.includes('edg');
-    const hasAi = typeof window !== 'undefined' && !!(window.ai && window.ai.languageModel);
-    return isChromium || hasAi;
+  // Provider → API key UI metadata
+  const PROVIDER_API_META = {
+    openai:      { label: 'OpenAI API Key:', placeholder: 'sk-...', helpUrl: 'https://platform.openai.com/api-keys' },
+    gemini:      { label: 'Gemini API Key:', placeholder: 'AIza...', helpUrl: 'https://aistudio.google.com/app/apikey' },
+    groq:        { label: 'Groq API Key:', placeholder: 'gsk_...', helpUrl: 'https://console.groq.com/keys' },
+    openrouter:  { label: 'OpenRouter Key:', placeholder: 'sk-or-...', helpUrl: 'https://openrouter.ai/keys' }
+  };
+
+  /**
+   * Fetch free models from OpenRouter public API and populate the model dropdown.
+   * Free models have pricing.prompt === '0' and pricing.completion === '0'.
+   */
+  async function fetchOpenRouterFreeModels() {
+    if (!aiModelRow || !aiModelSelect || !aiModelStatus) return;
+    aiModelStatus.textContent = 'Fetching models...';
+    if (btnRefreshModels) btnRefreshModels.disabled = true;
+
+    try {
+      const res = await fetch('https://openrouter.ai/api/v1/models', {
+        headers: {
+          'Accept': 'application/json',
+          'HTTP-Referer': 'https://github.com/domain-scout',
+          'X-Title': 'Domain Scout AI'
+        }
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+
+      // Words that indicate non-chat, safety, audio, or broken models
+      const EXCLUDED_PATTERNS = /(?:safety|guardrail|moderation|audio|music|lyria|whisper|embedding|tts|stt|vision-only|only available on agentic)/i;
+
+      const rawFree = (json.data || []).filter(m => {
+        const p = m.pricing || {};
+        const isFreePrice = parseFloat(p.prompt || '1') === 0 && parseFloat(p.completion || '1') === 0;
+        if (!isFreePrice) return false;
+
+        const idAndDesc = `${m.id} ${m.name || ''} ${m.description || ''}`;
+        if (EXCLUDED_PATTERNS.test(idAndDesc)) return false;
+
+        return true;
+      });
+
+      // Filter out duplicates and separate openrouter/free
+      const otherModels = rawFree
+        .filter(m => m.id !== 'openrouter/free')
+        .sort((a, b) => (a.name || a.id).localeCompare(b.name || b.id));
+
+      const finalModelList = [
+        { id: 'openrouter/free', name: '🌟 Auto Router (Best Free Model)' },
+        ...otherModels.map(m => ({ id: m.id, name: m.name || m.id }))
+      ];
+
+      // Rebuild options
+      aiModelSelect.innerHTML = '';
+      finalModelList.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.id;
+        opt.textContent = m.name;
+        aiModelSelect.appendChild(opt);
+      });
+
+      // Restore saved selection or default to openrouter/free
+      if (aiModelOverride && finalModelList.some(m => m.id === aiModelOverride)) {
+        aiModelSelect.value = aiModelOverride;
+      } else {
+        aiModelOverride = 'openrouter/free';
+        aiModelSelect.value = aiModelOverride;
+        persistState();
+      }
+      aiModelStatus.textContent = `${finalModelList.length} free`;
+    } catch (err) {
+      aiModelStatus.textContent = 'Fetch failed';
+      console.warn('OpenRouter model fetch failed:', err);
+      if (!aiModelSelect.options.length) {
+        aiModelSelect.innerHTML = '<option value="openrouter/free">🌟 Auto Router (Best Free Model)</option>';
+        aiModelOverride = 'openrouter/free';
+      }
+    } finally {
+      if (btnRefreshModels) btnRefreshModels.disabled = false;
+    }
   }
 
-  function setupAiProviderOptions() {
-    const isChromeSupported = isChromeSupportedBrowser();
-    const optChromeAi = document.getElementById('optChromeAi') || (aiProviderSelect && aiProviderSelect.querySelector('option[value="chrome_ai"]'));
-    if (!isChromeSupported && optChromeAi) {
-      optChromeAi.remove();
-      if (aiProvider === 'chrome_ai') {
-        aiProvider = 'auto';
+  function updateApiKeyRow(provider) {
+    const meta = PROVIDER_API_META[provider];
+    if (meta) {
+      aiApiKeyRow.classList.remove('hidden');
+      aiApiKeyLabel.textContent = meta.label;
+      aiApiKeyInput.placeholder = meta.placeholder;
+      aiApiKeyHelpLink.href = meta.helpUrl;
+      // Load the saved key for this specific provider (or clear the field)
+      aiApiKeyInput.value = aiApiKeys[provider] || '';
+      // Reset to password mode whenever we switch providers
+      aiApiKeyInput.type = 'password';
+      if (eyeIconShow) eyeIconShow.classList.remove('hidden');
+      if (eyeIconHide) eyeIconHide.classList.add('hidden');
+    } else {
+      aiApiKeyRow.classList.add('hidden');
+    }
+    // Show / hide OpenRouter model picker
+    if (provider === 'openrouter') {
+      if (aiModelRow) aiModelRow.classList.remove('hidden');
+      // Fetch models if dropdown is empty or has only the placeholder
+      if (!aiModelSelect || aiModelSelect.options.length <= 1) {
+        fetchOpenRouterFreeModels();
       }
+    } else {
+      if (aiModelRow) aiModelRow.classList.add('hidden');
     }
   }
 
   // Load Persisted State
   async function loadPersistedState() {
-    setupAiProviderOptions();
-
     try {
       const data = await getStoredData([
         'currentMode',
         'aiPrompt',
         'aiProvider',
+        'aiApiKeys',
+        'aiModelOverride',
         'domainInput',
         'preferredTlds',
         'lastResults',
@@ -336,8 +437,18 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (data.aiProvider) {
         const optionExists = aiProviderSelect && Array.from(aiProviderSelect.options).some(opt => opt.value === data.aiProvider);
-        aiProvider = optionExists ? data.aiProvider : 'auto';
+        aiProvider = optionExists ? data.aiProvider : 'smart_brain';
         if (aiProviderSelect) aiProviderSelect.value = aiProvider;
+      }
+      if (data.aiApiKeys && typeof data.aiApiKeys === 'object') {
+        aiApiKeys = data.aiApiKeys;
+        // Pre-fill the input if a cloud provider is already selected
+        if (aiApiKeyInput && PROVIDER_API_META[aiProvider]) {
+          aiApiKeyInput.value = aiApiKeys[aiProvider] || '';
+        }
+      }
+      if (data.aiModelOverride) {
+        aiModelOverride = data.aiModelOverride;
       }
       if (data.domainInput) {
         domainInput.value = data.domainInput;
@@ -357,6 +468,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.warn('Could not load storage state', e);
     }
 
+    updateApiKeyRow(aiProvider);
     switchMode(currentMode, false);
     renderTldChips();
   }
@@ -367,6 +479,8 @@ document.addEventListener('DOMContentLoaded', () => {
         currentMode,
         aiPrompt: aiPromptInput.value,
         aiProvider,
+        aiApiKeys,
+        aiModelOverride,
         domainInput: domainInput.value,
         preferredTlds,
         lastResults: currentResults,
@@ -600,8 +714,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
   aiProviderSelect.addEventListener('change', (e) => {
     aiProvider = e.target.value;
+    updateApiKeyRow(aiProvider);
     persistState();
   });
+
+  if (aiApiKeyInput) {
+    aiApiKeyInput.addEventListener('input', (e) => {
+      // Save the key under the currently-selected provider's slot
+      aiApiKeys[aiProvider] = e.target.value;
+      persistState();
+    });
+  }
+
+  if (btnToggleApiKey) {
+    btnToggleApiKey.addEventListener('click', () => {
+      const isPassword = aiApiKeyInput.type === 'password';
+      aiApiKeyInput.type = isPassword ? 'text' : 'password';
+      if (eyeIconShow) eyeIconShow.classList.toggle('hidden', isPassword);
+      if (eyeIconHide) eyeIconHide.classList.toggle('hidden', !isPassword);
+    });
+  }
+
+  // OpenRouter model selector events
+  if (aiModelSelect) {
+    aiModelSelect.addEventListener('change', (e) => {
+      aiModelOverride = e.target.value;
+      persistState();
+    });
+  }
+
+  if (btnRefreshModels) {
+    btnRefreshModels.addEventListener('click', () => {
+      fetchOpenRouterFreeModels();
+    });
+  }
 
   // Render TLD Chips
   function renderTldChips() {
@@ -754,11 +900,26 @@ document.addEventListener('DOMContentLoaded', () => {
     aiProgressMsg.textContent = '🤖 Brainstorming domain ideas with AI...';
     aiProgressBarFill.style.width = '15%';
 
+    // Validate API key is provided when a cloud provider is chosen
+    const needsKey = ['openai', 'gemini', 'groq', 'openrouter'].includes(aiProvider);
+    const currentApiKey = aiApiKeys[aiProvider] || '';
+    if (needsKey && !currentApiKey.trim()) {
+      showToast(`⚠️ Please enter your ${aiProvider.toUpperCase()} API key above.`);
+      if (aiApiKeyInput) aiApiKeyInput.focus();
+      isChecking = false;
+      btnAiGenerate.disabled = false;
+      btnAiGenerateText.textContent = 'Generate & Find Available Domains';
+      aiProgressCard.classList.add('hidden');
+      return;
+    }
+
     try {
       const huntResult = await AiGenerator.huntAvailableDomains({
         prompt,
         defaultTlds: preferredTlds,
         provider: aiProvider,
+        apiKey: aiApiKeys[aiProvider] || '',
+        modelOverride: aiProvider === 'openrouter' ? (aiModelOverride || '') : '',
         targetAvailableCount: aiTargetCount,
         maxRounds: 3,
         domainCheckerInstance: DomainChecker,

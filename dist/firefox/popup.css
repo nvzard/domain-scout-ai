@@ -1124,13 +1124,96 @@ textarea#aiPromptInput::placeholder {
 /* AI Controls Bar */
 .ai-controls-bar {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  gap: 8px;
   margin-top: 10px;
   padding: 10px 12px;
   background: var(--bg-card);
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-color);
+}
+
+/* API Key Row */
+.ai-apikey-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.apikey-input-wrapper {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+
+.apikey-input-wrapper:focus-within {
+  border-color: var(--accent-primary);
+}
+
+.apikey-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  padding: 6px 8px;
+  font-size: 12px;
+  font-family: monospace;
+  outline: none;
+  min-width: 0;
+}
+
+.apikey-input::placeholder {
+  color: var(--text-muted, #555);
+  font-family: var(--font-sans, sans-serif);
+  font-size: 11px;
+}
+
+.btn-apikey-toggle {
+  background: transparent;
+  border: none;
+  border-left: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 5px 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+
+.btn-apikey-toggle:hover {
+  color: var(--text-primary);
+}
+
+/* OpenRouter model selector row */
+.aimodel-select-wrapper {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 4px;
+}
+
+.aimodel-select {
+  flex: 1;
+  min-width: 0;
+}
+
+.apikey-help-link {
+  font-size: 11px;
+  color: var(--accent-primary);
+  text-decoration: none;
+  white-space: nowrap;
+  opacity: 0.85;
+  transition: opacity 0.15s;
+}
+
+.apikey-help-link:hover {
+  opacity: 1;
+  text-decoration: underline;
 }
 
 .ai-control-group {

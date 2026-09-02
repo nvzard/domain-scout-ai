@@ -211,43 +211,69 @@ async function testReiterationLoop() {
 // Test 11: AI Engine Display Names
 console.log('\nTest 11: AI Engine Display Names');
 assert.strictEqual(AiGenerator.getEngineDisplayName('smart_brain'), 'Smart Brain (Offline)');
-assert.strictEqual(AiGenerator.getEngineDisplayName('chatgpt_web'), 'ChatGPT Session');
-assert.strictEqual(AiGenerator.getEngineDisplayName('chrome_ai'), 'Chrome Browser AI');
-assert.strictEqual(AiGenerator.getEngineDisplayName('openai'), 'OpenAI (GPT-4o)');
+assert.strictEqual(AiGenerator.getEngineDisplayName('openai'), 'OpenAI (GPT-4o mini)');
+assert.strictEqual(AiGenerator.getEngineDisplayName('gemini'), 'Google Gemini');
+assert.strictEqual(AiGenerator.getEngineDisplayName('groq'), 'Groq (Llama 3)');
+assert.strictEqual(AiGenerator.getEngineDisplayName('openrouter'), 'OpenRouter');
 console.log('✓ Passed AI Engine Display Names tests');
 
-// Test 12: Chrome AI Firefox vs Chrome Environment Validation & Default 10 Target Count
-console.log('\nTest 12: Chrome AI Environment Validation');
-async function testChromeAiValidation() {
-  const originalUserAgent = typeof navigator !== 'undefined' ? navigator.userAgent : undefined;
-  
-  // Mock navigator userAgent for Firefox
-  try {
-    Object.defineProperty(navigator, 'userAgent', {
-      value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/119.0',
-      configurable: true
-    });
-  } catch (e) {
-    // If not definable, ignore
-  }
-  
-  let firefoxError = null;
-  try {
-    await AiGenerator.generateWithChromeAi('test prompt');
-  } catch (err) {
-    firefoxError = err;
-  }
-  assert.ok(firefoxError, 'Should throw error when attempting Chrome AI in Firefox');
-  assert.ok(firefoxError.message.includes('Firefox'), 'Error message should mention Firefox');
+// Test 12: OpenRouter Response Extraction & Fallback Parsing
+console.log('\nTest 12: OpenRouter Response Extraction & Fallback Parsing');
+async function testOpenRouterParsing() {
+  // Mock global fetch for testing custom API parser
+  const originalFetch = global.fetch;
 
-  // Restore navigator
-  if (originalUserAgent !== undefined) {
-    Object.defineProperty(navigator, 'userAgent', { value: originalUserAgent, configurable: true });
+  try {
+    // 1. Standard choices[0].message.content
+    global.fetch = async () => ({
+      ok: true,
+      json: async () => ({
+        choices: [{ message: { content: '1. AppCraft.io\n2. LaunchForge.ai' } }]
+      })
+    });
+    const res1 = await AiGenerator.generateWithCustomApi('openrouter', 'test-key', 'app generator');
+    assert.ok(res1.includes('AppCraft.io'));
+
+    // 2. Reasoning model fallback (content is null, output is in reasoning)
+    global.fetch = async () => ({
+      ok: true,
+      json: async () => ({
+        choices: [{
+          message: {
+            content: null,
+            reasoning: '1. BrainStack.ai\n2. CortexFlow.io'
+          }
+        }]
+      })
+    });
+    const res2 = await AiGenerator.generateWithCustomApi('openrouter', 'test-key', 'brain assistant');
+    assert.ok(res2.includes('BrainStack.ai'));
+
+    // 3. Rate limit / 429 error message formatting
+    global.fetch = async () => ({
+      ok: false,
+      status: 429,
+      statusText: 'Too Many Requests',
+      json: async () => ({
+        error: { message: 'Provider returned error: rate-limited upstream' }
+      })
+    });
+    let caughtErr = null;
+    try {
+      await AiGenerator.generateWithCustomApi('openrouter', 'test-key', 'prompt');
+    } catch (e) {
+      caughtErr = e;
+    }
+    assert.ok(caughtErr, 'Should throw on 429 error');
+    assert.ok(caughtErr.message.includes('rate-limited') || caughtErr.message.includes('busy'));
+
+  } finally {
+    global.fetch = originalFetch;
   }
-  console.log('✓ Passed Chrome AI Firefox validation tests');
+  console.log('✓ Passed OpenRouter Response Extraction & Fallback tests');
 }
 
-Promise.all([testReiterationLoop(), testChromeAiValidation()]).then(() => {
+Promise.all([testReiterationLoop(), testOpenRouterParsing()]).then(() => {
   console.log('\n🎉 ALL 12 TEST SUITES PASSED SUCCESSFULLY!');
 }).catch(err => {
   console.error('\n❌ Test failed:', err);
