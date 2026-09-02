@@ -5,6 +5,25 @@ All notable changes to **Domain Scout AI** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-09-02
+
+### 🚀 Added
+- **Multi-Provider Cloud AI Models**:
+  - **OpenRouter Integration**: Access hundreds of models including fast free tiers (`google/gemini-2.0-flash-exp:free`, `meta-llama/llama-3.3-70b-instruct:free`, `deepseek/deepseek-r1:free`, etc.) and auto routing.
+  - **Dynamic Free Model Fetcher**: Automatically queries OpenRouter's live catalog to populate free models with a 1-click refresh button.
+  - **Direct Cloud Provider Keys**: Native support for **OpenAI** (`gpt-4o-mini`), **Google Gemini** (`gemini-2.0-flash`), and **Groq** (`llama-3.3-70b-versatile`) with direct API key authorization.
+  - **Secure Local API Key Management**: Secure password field with show/hide eye toggle and fast link to obtain API keys for each respective provider.
+- **AI Engine Badges in Results**:
+  - Results discovery banner dynamically displays which engine generated the domain ideas (e.g. `🧠 Smart Brain (Offline)`, `🔀 OpenRouter (Free & Fast)`, `🤖 OpenAI`, `✨ Google Gemini`, `⚡ Groq`).
+- **Massive Upgrade to Smart Brain (Offline / Instant)**:
+  - Added 19+ curated industry dictionary domains: E-commerce, Food & Dining, Coffee & Beverage, Cloud FinOps & Cost Optimization, Gaming & Collectibles / TCG, Fitness & Wellness, Real Estate & Housing, Business & FinTech, AI & Machine Learning, DevTools & Cloud Infra, Curation & SaaS Discovery, Creative & Design, Education & EdTech, Travel & Logistics, Social & Community, Security & Privacy, Marketing & Growth, Productivity & Workspace, Pets & Animals.
+  - Added concept-to-root subject entity mappings for domain topics (e.g. pokemon, coffee, finops, etc.).
+  - Added advanced syllabic blending, linguistic compounding, and smart root combinations for punchy, brandable startup names.
+
+### 🔒 Privacy & Permissions Cleanup
+- Removed unnecessary `cookies` permission and `https://chatgpt.com/*` host permission in Chrome and Firefox manifests for a tighter, privacy-first security model and faster store review approvals.
+- All API keys and custom model preferences are stored 100% locally in browser storage and never transmitted to external telemetry or third parties.
+
 ---
 
 ## [1.1.0] - 2026-09-02

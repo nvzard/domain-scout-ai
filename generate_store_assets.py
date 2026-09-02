@@ -116,6 +116,7 @@ def render_real_popup_state(state_config, output_png, window_height=640):
           // Pre-populate real storage state
           localStorage.setItem('dc_currentMode', JSON.stringify({json.dumps(state_config.get('currentMode', 'ai'))}));
           localStorage.setItem('dc_aiPrompt', JSON.stringify({json.dumps(state_config.get('aiPrompt', ''))}));
+          localStorage.setItem('dc_aiProvider', JSON.stringify({json.dumps(state_config.get('aiProvider', 'smart_brain'))}));
           localStorage.setItem('dc_domainInput', JSON.stringify({json.dumps(state_config.get('domainInput', ''))}));
           localStorage.setItem('dc_preferredTlds', JSON.stringify({json.dumps(state_config.get('preferredTlds', ['com', 'io', 'ai']))}));
           localStorage.setItem('dc_lastAiMeta', JSON.stringify({json.dumps(state_config.get('lastAiMeta', None))}));
@@ -166,12 +167,13 @@ SCREENSHOTS = [
         "config": {
             "currentMode": "ai",
             "aiPrompt": "AI agent for automated productivity, meeting notes & smart workflows",
+            "aiProvider": "openrouter",
             "preferredTlds": ["com", "io", "ai"],
             "lastResults": [],
             "lastAiMeta": None
         },
         "window_height": 550,
-        "tag": "🤖 AI SCOUT MODE",
+        "tag": "🤖 MULTI-MODEL AI SCOUT",
         "title": "Brainstorm Domain Names Fast with AI",
         "subtitle": "Describe any product or startup idea — AI brainstorms & auto-hunts available domains",
         "out": "screenshot-1-search-input.jpg"
@@ -180,6 +182,7 @@ SCREENSHOTS = [
         "config": {
             "currentMode": "ai",
             "aiPrompt": "AI agent for automated productivity, meeting notes & smart workflows",
+            "aiProvider": "smart_brain",
             "preferredTlds": ["com", "io", "ai"],
             "lastAiMeta": {
                 "prompt": "AI agent for automated productivity, meeting notes & smart workflows",
@@ -196,13 +199,13 @@ SCREENSHOTS = [
         "window_height": 640,
         "tag": "✨ 10 AVAILABLE FOUND",
         "title": "Autonomous AI Hunt Across Iterative Rounds",
-        "subtitle": "Auto exclusion loop detects taken names and iterates until 10 available domains are found",
+        "subtitle": "Auto-exclusion loop detects taken names and iterates until 10 available domains are found",
         "out": "screenshot-2-results-overview.jpg"
     },
     {
         "config": {
             "currentMode": "manual",
-            "domainInput": "1. **LaunchScout** (.com, .io, .ai) — Curated discovery platform\n2. **Noviqo** (com / co) — Modern AI assistant\n3. *Brevio* [Short & brandable]\n4. DevPulse (.dev, .io) — Developer tools\n5. [CloudForge](https://cloudforge.dev)",
+            "domainInput": "1. **LaunchScout** (.com, .io, .ai) — Curated discovery platform\\n2. **Noviqo** (com / co) — Modern AI assistant\\n3. *Brevio* [Short & brandable]\\n4. DevPulse (.dev, .io) — Developer tools\\n5. [CloudForge](https://cloudforge.dev)",
             "preferredTlds": ["com", "io", "ai", "co", "dev", "app"],
             "lastResults": [],
             "lastAiMeta": None
@@ -363,7 +366,7 @@ def generate_small_promo():
     draw.text(((W - sw) // 2, icon_y + 114), sub, fill=(199, 210, 254), font=font_sub)
     
     font_pill = get_font(11, bold=True)
-    pills = ["✨ AI SCOUT MODE", "🛒 REGISTRAR LINKS", "🔒 ZERO TRACKING"]
+    pills = ["✨ AI SCOUT MODE", "🧠 MULTI-MODEL AI", "🔒 ZERO TRACKING"]
     total_pill_w = 0
     pill_widths = []
     for p in pills:
@@ -420,9 +423,9 @@ def generate_marquee_promo():
     
     bullets = [
         "Autonomous AI Reiteration Loop (Finds 10 Available Domains)",
-        "Auto, ChatGPT Web Session, Chrome AI & Offline Brain",
+        "OpenRouter, OpenAI, Gemini, Groq & Offline Smart Brain",
         "1-Click Registrar Purchase (GoDaddy, Spaceship, Namecheap)",
-        "100% Client-Side Privacy (Zero Tracking & No API Keys Needed)"
+        "100% Client-Side Privacy (Zero Tracking & Direct API Calls)"
     ]
     by = 340
     font_bullet = get_font(14, bold=False)

@@ -1,8 +1,8 @@
-# Cross-Browser Domain Availability Checker
+# Domain Scout AI — Fast Domain Search & AI Ideator
 
-A unified, high-performance browser extension for **Google Chrome** and **Mozilla Firefox** that bulk-checks domain availability across top TLDs (`.com`, `.io`, `.ai`, etc.) via InstantDomainSearch.
+A unified, high-performance browser extension for **Google Chrome** and **Mozilla Firefox** that bulk-checks domain availability across top TLDs (`.com`, `.io`, `.ai`, etc.) via InstantDomainSearch and auto-hunts available domains using AI.
 
-![Domain Availability Checker Banner](https://raw.githubusercontent.com/nvzard/domain-scout/refs/heads/main/store-assets/promo-marquee-1400x560.png)
+![Domain Scout AI Banner](https://raw.githubusercontent.com/nvzard/domain-scout/refs/heads/main/store-assets/promo-marquee-1400x560.png)
 
 🎥 **Demo Video**: [Watch on YouTube (https://youtu.be/ZstDT9bYeqc)](https://youtu.be/ZstDT9bYeqc)
 
@@ -13,9 +13,10 @@ A unified, high-performance browser extension for **Google Chrome** and **Mozill
 All UI, styling, and business logic are maintained inside the `src/` directory. When you make changes in `src/`, running the build script automatically syncs and packages distributions for both Chrome and Firefox.
 
 ```
-domain-checker-extension/
+domain-scout-ai/
 ├── src/                          # 📁 EDIT HERE (Single Source of Truth)
 │   ├── domain-checker.js         # Core hashing, parser, API client
+│   ├── ai-generator.js           # Multi-provider AI engine & smart semantic brain
 │   ├── popup.html                # Shared popup UI markup
 │   ├── popup.css                 # Modern dark theme styles
 │   ├── popup.js                  # Cross-browser event handler & storage
@@ -26,7 +27,9 @@ domain-checker-extension/
 ├── dist/                         # 📦 Generated builds
 │   ├── chrome/                   # Load into chrome://extensions
 │   └── firefox/                  # Load into about:debugging
-├── build.js                      # Instant 0-dependency build & watch script
+├── store-assets/                 # 🎨 Store promo tiles & high-res screenshots
+├── packages/                     # 🎁 Generated store zip bundles
+├── build.js                      # Instant 0-dependency build & package script
 └── package.json                  # npm scripts
 ```
 
@@ -41,11 +44,15 @@ domain-checker-extension/
    # or with npm:
    npm run build
    ```
-3. **Or run with Auto-Watch during active development**:
+3. **Package distributions for Chrome Web Store & Firefox AMO**:
    ```bash
-   node build.js --watch
-   # or with npm:
+   npm run package
+   # or: node build.js --package
+   ```
+4. **Or run with Auto-Watch during active development**:
+   ```bash
    npm run watch
+   # or: node build.js --watch
    ```
    *Any change in `src/` or `manifests/` will instantly recompile both `dist/chrome/` and `dist/firefox/` in milliseconds.*
 
@@ -59,7 +66,7 @@ domain-checker-extension/
 3. Click **"Load unpacked"**.
 4. Select the directory:
    ```
-   /domain-availability-checker/dist/chrome
+   /domain-scout/dist/chrome
    ```
 5. Click the extension icon in your Chrome toolbar to use it!
 
@@ -70,7 +77,7 @@ domain-checker-extension/
 2. Click **"Load Temporary Add-on..."**.
 3. Select the file:
    ```
-   /domain-availability-checker/dist/firefox/manifest.json
+   /domain-scout/dist/firefox/manifest.json
    ```
 4. Click the extension icon in your Firefox toolbar!
 
@@ -78,17 +85,18 @@ domain-checker-extension/
 
 ## ✨ Features Supported in Both Browsers
 
-### 🤖 AI Scout Mode (NEW)
+### 🤖 AI Scout Mode
 - **Concept-to-Domain Ideator**: Simply describe your product, startup, or project idea (e.g. *"Suggest domain ideas for a Product Hunt alternative for indie hackers"*).
 - **Autonomous Multi-Round Reiteration Loop**: If generated domains are registered/taken, the AI automatically re-prompts with taken exclusions, hunting across rounds until available domains matching your concept are found!
 - **Multi-Provider Client-Side AI (Zero Backend Needed)**:
-  - **OpenRouter (Free & Fast)**: Access free models (Auto Router, Llama 3.3, DeepSeek, Gemini, etc.) and fast cloud routing with your OpenRouter API key.
+  - **OpenRouter (Free & Fast)**: Access free models (Llama 3.3, DeepSeek, Gemini Flash, etc.) and dynamic live catalog fetching with your OpenRouter API key.
   - **OpenAI**: GPT-4o mini for high-quality domain naming via your OpenAI API key.
   - **Google Gemini**: Fast and creative domain idea generation via Google Gemini API.
   - **Groq**: Ultra-low-latency Llama 3 inference via Groq API.
-  - **Smart Brain (Offline / Instant)**: 100% client-side, zero-config, instant startup brand naming engine using linguistic roots and industry vocabulary graphs.
+  - **Smart Brain (Offline / Instant)**: 100% client-side, zero-config, instant startup brand naming engine using linguistic roots, syllable compounding, and 19+ industry vocabulary dictionaries (FinTech, AI, DevTools, SaaS, E-Commerce, Food, Gaming, etc.).
 - **Inspiration Quick Chips**: 1-click starter prompts for SaaS, AI Assistants, Dev Tools, Design Studios, and FinTech.
 - **Target Available Domains**: Hunts until 10 available domains are found across iterative rounds.
+- **AI Engine Badges**: Summary banner indicates exactly which engine was used to generate the candidates.
 
 ### 📋 Manual Bulk Checker Mode
 - **Multi-Format Input**:
