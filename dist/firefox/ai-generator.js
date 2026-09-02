@@ -5,56 +5,178 @@
  */
 
 (function (global) {
-  // Common linguistic root databases for the Smart Semantic AI Brain
-  const INDUSTRY_DICTIONARY = {
-    // Discovery / Directories / Product Hunt alternatives / Curation
-    curation: [
-      'hunt', 'scout', 'spot', 'shelf', 'base', 'list', 'curate', 'deck', 'vault', 'stack',
-      'launch', 'rank', 'radar', 'feed', 'index', 'board', 'find', 'nest', 'grid', 'pulse',
-      'pick', 'forge', 'show', 'drop', 'hub', 'crate', 'bay', 'stream', 'dock', 'wave'
+  // Rich multi-industry concept & keyword lexicons for the Smart Semantic AI Brain
+  const INDUSTRY_DICTIONARIES = {
+    ecommerce: [
+      'mart', 'store', 'vault', 'depot', 'market', 'bazaar', 'outlet', 'stash', 'corner',
+      'box', 'crate', 'cart', 'shop', 'supply', 'merch', 'goods', 'bay', 'hub', 'haven', 'drop'
     ],
-    // AI / Machine Learning / Smart Automation
+    food_delivery: [
+      'eats', 'bite', 'dash', 'drop', 'meal', 'crave', 'feast', 'dish', 'chef', 'munch',
+      'taste', 'nom', 'chow', 'kitchen', 'table', 'cook', 'yum', 'grub', 'fork', 'express',
+      'swift', 'fresh', 'pantry', 'snack', 'speedy', 'quick', 'runner'
+    ],
+    coffee_beverage: [
+      'brew', 'bean', 'beans', 'roast', 'roasters', 'cafe', 'cup', 'sip', 'perk', 'grind',
+      'espresso', 'latte', 'drip', 'mocha', 'bar', 'pour', 'steam', 'mug', 'aroma', 'java',
+      'press', 'blend', 'roastery', 'caffeine', 'den', 'house', 'lounge'
+    ],
+    cloud_finops: [
+      'trim', 'cut', 'slash', 'save', 'saver', 'opt', 'opti', 'shrink', 'less', 'drop',
+      'guard', 'finops', 'ops', 'cost', 'spend', 'bill', 'scale', 'stack', 'cloud', 'infra',
+      'audit', 'watch', 'wise', 'prune', 'curb', 'pare', 'down', 'ctrl'
+    ],
+    gaming_collectibles: [
+      'zone', 'quest', 'dex', 'play', 'cards', 'loot', 'guild', 'realm', 'haven', 'den',
+      'vault', 'hub', 'club', 'verse', 'deck', 'stash', 'arcade', 'forge', 'slab', 'pack',
+      'tcg', 'meta', 'mon', 'box', 'mart', 'corner', 'goods'
+    ],
+    fitness_wellness: [
+      'fit', 'gym', 'pulse', 'vital', 'lift', 'flex', 'stride', 'motion', 'peak', 'core',
+      'shape', 'fuel', 'glow', 'heal', 'active', 'stamina', 'track', 'form', 'sweat', 'run',
+      'body', 'zen', 'flow'
+    ],
+    real_estate: [
+      'nest', 'roof', 'haven', 'dwell', 'abode', 'loft', 'estate', 'space', 'pad', 'key',
+      'door', 'terra', 'plot', 'place', 'home', 'casa', 'realty', 'land', 'stay', 'living'
+    ],
+    business: [
+      'pay', 'cash', 'mint', 'coin', 'vault', 'ledger', 'trade', 'yield', 'flow', 'fund',
+      'capital', 'asset', 'lend', 'spend', 'bill', 'worth', 'prime', 'fin', 'pocket', 'bank',
+      'scale', 'wealth', 'wallet', 'token', 'grow', 'pulse', 'hedge', 'vest', 'swift', 'apex'
+    ],
     ai: [
       'mind', 'neural', 'cortex', 'synapse', 'agent', 'brain', 'bot', 'prompt', 'logic', 'sense',
       'vector', 'axon', 'intel', 'cogni', 'optic', 'spark', 'flow', 'tensor', 'hyper', 'omni',
       'auto', 'gen', 'synth', 'smart', 'algo', 'nova', 'deep', 'core', 'prism', 'matrix'
     ],
-    // Developer Tools / Cloud / Infrastructure
     devtools: [
       'code', 'dev', 'stack', 'git', 'dock', 'ship', 'build', 'forge', 'hub', 'node',
       'pipe', 'flow', 'byte', 'script', 'host', 'sync', 'hook', 'dash', 'craft', 'pack',
       'cloud', 'infra', 'scale', 'mesh', 'wire', 'port', 'rail', 'block', 'layer', 'core'
     ],
-    // Fintech / Payments / Crypto / Business
-    business: [
-      'pay', 'cash', 'mint', 'coin', 'vault', 'ledger', 'trade', 'yield', 'flow', 'fund',
-      'capital', 'asset', 'lend', 'spend', 'bill', 'worth', 'prime', 'fin', 'pocket', 'bank',
-      'scale', 'metric', 'grow', 'pulse', 'hedge', 'vest', 'swift', 'apex', 'bold', 'peak'
+    curation: [
+      'hunt', 'scout', 'spot', 'shelf', 'base', 'list', 'curate', 'deck', 'vault', 'stack',
+      'launch', 'rank', 'radar', 'feed', 'index', 'board', 'find', 'nest', 'grid', 'pulse',
+      'pick', 'forge', 'show', 'drop', 'hub', 'crate', 'bay', 'stream', 'dock', 'wave'
     ],
-    // Design / Media / Content / Creative
     creative: [
       'pixel', 'canvas', 'craft', 'studio', 'draw', 'frame', 'muse', 'glow', 'lens', 'shade',
       'form', 'glyph', 'vibe', 'vector', 'blend', 'art', 'palette', 'scene', 'draft', 'cast',
       'look', 'motif', 'tint', 'layer', 'focus', 'shine', 'type', 'font', 'press', 'ink'
     ],
-    // General high-converting startup prefixes & suffixes
-    prefixes: [
-      'get', 'try', 'use', 'go', 'open', 'hyper', 'meta', 'omni', 'super', 'nova',
-      'zen', 'pure', 'true', 'smart', 'pro', 'rapid', 'swift', 'prime', 'next', 'apex',
-      'ever', 'bright', 'clear', 'vivid', 'bold', 'peak', 'aura', 'fast', 'quick', 'neo'
+    education: [
+      'learn', 'study', 'brain', 'academy', 'skill', 'mentor', 'tutor', 'class', 'ed',
+      'scholar', 'mind', 'quest', 'chalk', 'course', 'guide', 'know', 'campus', 'read', 'wise'
     ],
-    suffixes: [
-      'ly', 'ify', 'io', 'hq', 'lab', 'hub', 'space', 'box', 'app', 'flow',
-      'stack', 'kit', 'desk', 'dock', 'lane', 'wire', 'point', 'loop', 'craft', 'base',
-      'pulse', 'forge', 'wave', 'nest', 'grid', 'sync', 'spot', 'vault', 'node', 'deck'
+    travel: [
+      'trip', 'voyage', 'trek', 'roam', 'path', 'route', 'fly', 'glide', 'ride', 'fleet',
+      'drift', 'hop', 'way', 'compass', 'map', 'tour', 'journey', 'trail', 'jet'
     ],
-    // Short brandable abstract prefixes
-    abstractRoots: [
-      'nov', 'bre', 'vel', 'nex', 'lum', 'syn', 'vol', 'str', 'tra', 'om',
-      'dyn', 'cal', 'zen', 'arc', 'sol', 'vort', 'kin', 'aer', 'tal', 'fen',
-      'lux', 'rad', 'vex', 'clar', 'plur', 'val', 'prim', 'opt', 'gen', 'kiv'
+    social: [
+      'vibe', 'circle', 'tribe', 'club', 'gang', 'hang', 'link', 'hive', 'loop', 'crowd',
+      'pulse', 'guild', 'feed', 'squad', 'band', 'chat', 'cast', 'folk', 'room', 'crew'
+    ],
+    security: [
+      'shield', 'guard', 'vault', 'lock', 'safe', 'fort', 'armor', 'sentry', 'ward', 'seal',
+      'crypto', 'key', 'haven', 'wall', 'defend', 'gate', 'secure', 'pass', 'trust'
+    ],
+    marketing: [
+      'growth', 'boost', 'reach', 'scale', 'viral', 'rank', 'hook', 'funnel', 'convert',
+      'click', 'lead', 'pulse', 'surge', 'amp', 'pitch', 'gain', 'ad', 'spark', 'hype'
+    ],
+    productivity: [
+      'task', 'flow', 'sync', 'desk', 'track', 'board', 'pace', 'work', 'align', 'plan',
+      'organize', 'focus', 'notion', 'hub', 'suite', 'doc', 'sheet', 'note', 'time', 'cal'
+    ],
+    pets: [
+      'pet', 'pup', 'paw', 'bark', 'meow', 'fur', 'tails', 'hound', 'pooch', 'whiskers',
+      'fetch', 'paws', 'leash', 'snout', 'buddy', 'vet', 'pack'
     ]
   };
+
+  // Comprehensive subject entity dictionary (maps topic concepts to concise brand roots)
+  const SUBJECT_ENTITIES = {
+    'pokemon': ['poke', 'pokemon'],
+    'aws': ['aws', 'cloud'],
+    'amazon': ['aws', 'cloud', 'prime'],
+    'coffee': ['coffee', 'brew', 'roast', 'cafe', 'bean'],
+    'cafe': ['cafe', 'brew', 'coffee', 'roast'],
+    'tea': ['tea', 'brew', 'chai', 'leaf'],
+    'food': ['food', 'meal', 'eats', 'bite', 'dish'],
+    'fitness': ['fit', 'gym', 'vital'],
+    'gym': ['gym', 'fit', 'lift'],
+    'workout': ['fit', 'lift', 'gym', 'sweat'],
+    'crypto': ['crypto', 'coin', 'token', 'chain'],
+    'bitcoin': ['btc', 'coin', 'crypto', 'sats'],
+    'estate': ['estate', 'realty', 'home', 'nest'],
+    'realestate': ['estate', 'realty', 'home', 'nest'],
+    'property': ['estate', 'realty', 'home', 'nest'],
+    'pet': ['pet', 'pup', 'paw'],
+    'dog': ['pup', 'dog', 'hound', 'paw'],
+    'cat': ['cat', 'kitty', 'paw'],
+    'hunt': ['hunt', 'scout', 'launch', 'spot'],
+    'product': ['hunt', 'launch', 'scout', 'shelf'],
+    'ai': ['ai', 'mind', 'agent', 'bot', 'cortex'],
+    'code': ['code', 'dev', 'stack', 'byte', 'git'],
+    'developer': ['dev', 'code', 'stack', 'git'],
+    'dev': ['dev', 'code', 'stack', 'git'],
+    'travel': ['travel', 'trip', 'roam', 'trek', 'voyage'],
+    'music': ['beat', 'tune', 'sound', 'sonic', 'audio'],
+    'video': ['video', 'clip', 'film', 'reel', 'cast'],
+    'design': ['design', 'pixel', 'craft', 'studio', 'ui'],
+    'health': ['health', 'care', 'med', 'vital', 'cure'],
+    'book': ['book', 'read', 'page', 'shelf', 'novel'],
+    'car': ['auto', 'car', 'ride', 'drive', 'gear'],
+    'game': ['game', 'play', 'quest', 'loot', 'zone'],
+    'gaming': ['game', 'play', 'quest', 'loot', 'zone'],
+    'spend': ['aws', 'cloud', 'spend', 'cost'],
+    'spends': ['aws', 'cloud', 'spend', 'cost']
+  };
+
+  // High-affinity modifiers mapped by intent & domain
+  const INTENT_MODIFIERS = {
+    'store': ['mart', 'vault', 'store', 'shop', 'box', 'deck', 'drop', 'hub', 'depot', 'goods', 'loot', 'bay', 'corner'],
+    'shop': ['mart', 'vault', 'store', 'shop', 'box', 'deck', 'drop', 'hub', 'depot', 'goods', 'loot', 'bar', 'lab', 'cup', 'den'],
+    'decrease': ['cut', 'trim', 'save', 'less', 'opt', 'slash', 'guard', 'wise', 'drop', 'finops', 'curb', 'down', 'cost', 'spend'],
+    'reduce': ['cut', 'trim', 'save', 'less', 'opt', 'slash', 'guard', 'wise', 'drop', 'finops', 'curb', 'down', 'cost', 'spend'],
+    'cut': ['cut', 'trim', 'save', 'less', 'opt', 'slash', 'guard', 'finops', 'cost', 'spend'],
+    'save': ['save', 'saver', 'cut', 'trim', 'guard', 'wise', 'less', 'cost', 'spend'],
+    'spends': ['cut', 'trim', 'save', 'less', 'opt', 'slash', 'guard', 'wise', 'drop', 'finops', 'cost', 'bill'],
+    'spend': ['cut', 'trim', 'save', 'less', 'opt', 'slash', 'guard', 'wise', 'drop', 'finops', 'cost', 'bill'],
+    'cost': ['cut', 'trim', 'save', 'less', 'opt', 'slash', 'guard', 'wise', 'drop', 'finops', 'bill'],
+    'costs': ['cut', 'trim', 'save', 'less', 'opt', 'slash', 'guard', 'wise', 'drop', 'finops', 'bill'],
+    'delivery': ['dash', 'drop', 'swift', 'express', 'box', 'nom', 'munch', 'feast', 'fresh', 'quick', 'rush', 'go', 'speedy', 'runner'],
+    'deliver': ['dash', 'drop', 'swift', 'express', 'box', 'nom', 'munch', 'feast', 'fresh', 'quick', 'rush', 'go', 'speedy', 'runner'],
+    'tracker': ['track', 'pulse', 'sync', 'log', 'meter', 'watch', 'flow', 'desk', 'base', 'hub', 'ops'],
+    'track': ['track', 'pulse', 'sync', 'log', 'meter', 'watch', 'flow', 'desk', 'base', 'hub', 'ops'],
+    'payments': ['pay', 'wallet', 'vault', 'mint', 'cash', 'trade', 'flow', 'pass', 'hub', 'base', 'sats'],
+    'payment': ['pay', 'wallet', 'vault', 'mint', 'cash', 'trade', 'flow', 'pass', 'hub', 'base', 'sats'],
+    'pay': ['wallet', 'vault', 'mint', 'cash', 'trade', 'flow', 'pass', 'hub', 'base'],
+    'alternative': ['scout', 'spot', 'base', 'shelf', 'deck', 'vault', 'launch', 'rank', 'radar', 'feed', 'hub', 'nest'],
+    'directory': ['scout', 'spot', 'base', 'shelf', 'deck', 'vault', 'launch', 'rank', 'radar', 'feed', 'hub', 'nest', 'list'],
+    'platform': ['hub', 'base', 'stack', 'dock', 'deck', 'spot', 'space', 'nest', 'grid', 'flow', 'core', 'lab'],
+    'service': ['hub', 'desk', 'lab', 'stack', 'ops', 'base', 'spot', 'flow', 'box', 'suite'],
+    'app': ['hub', 'desk', 'box', 'space', 'stack', 'flow', 'sync', 'lab', 'base']
+  };
+
+  // High-converting startup prefixes & action prefixes
+  const BRAND_PREFIXES = [
+    'get', 'try', 'go', 'use', 'pure', 'true', 'smart', 'super', 'nova',
+    'zen', 'pro', 'rapid', 'swift', 'prime', 'next', 'apex', 'bold', 'peak',
+    'aura', 'fast', 'quick', 'neo', 'daily', 'all', 'hey', 'my', 'the', 'snap'
+  ];
+
+  // Modern brandable suffixes
+  const BRAND_SUFFIXES = [
+    'ly', 'ify', 'io', 'hq', 'lab', 'hub', 'box', 'app', 'flow', 'stack',
+    'kit', 'desk', 'dock', 'point', 'loop', 'craft', 'base', 'pulse', 'forge',
+    'wave', 'nest', 'grid', 'sync', 'spot', 'vault', 'node', 'deck', 'co',
+    'den', 'zone', 'mart', 'house', 'club', 'room', 'bar', 'drop', 'dash', 'bite'
+  ];
+
+  // Backward compatibility dictionary reference
+  const INDUSTRY_DICTIONARY = INDUSTRY_DICTIONARIES;
 
   /**
    * Stop words to filter out from user concept prompts
@@ -62,9 +184,10 @@
   const STOP_WORDS = new Set([
     'suggest', 'me', 'some', 'domain', 'domains', 'ideas', 'idea', 'name', 'names',
     'for', 'a', 'an', 'the', 'and', 'or', 'of', 'in', 'on', 'with', 'to', 'from',
-    'alternative', 'alternatives', 'like', 'similar', 'good', 'best', 'creative',
-    'modern', 'cool', 'catchy', 'brandable', 'startup', 'tool', 'platform', 'app',
-    'website', 'service', 'product', 'help', 'please', 'give', 'generate', 'create'
+    'good', 'best', 'creative', 'modern', 'cool', 'catchy', 'brandable', 'startup',
+    'website', 'help', 'please', 'give', 'generate', 'create',
+    'looking', 'need', 'want', 'build', 'make', 'find', 'which', 'that', 'this',
+    'can', 'how', 'about'
   ]);
 
   /**
@@ -86,23 +209,186 @@
   }
 
   /**
-   * Detect category affinity based on prompt keywords
+   * Detect matching category affinity based on prompt keywords
    * @param {string} prompt
    * @returns {string}
    */
   function detectCategory(prompt) {
     const lower = prompt.toLowerCase();
-    if (/\b(?:ai|gpt|llm|intelligence|agent|smart|neural|model|prompt|bot|machine)\b/i.test(lower)) return 'ai';
+    
+    if (/\b(?:poke|pokemon|tcg|card|cards|collect|collectible|collectibles|slab|dex|anime)\b/i.test(lower)) return 'gaming_collectibles';
+    if (/\b(?:coffee|cafe|espresso|latte|roast|roastery|brew|bean|beans|caffeine|cappuccino|mocha)\b/i.test(lower)) return 'coffee_beverage';
+    if (/\b(?:food|delivery|meal|eats|dish|dine|dining|restaurant|kitchen|cook|lunch|dinner|snack|grub|munch|crave|taste|bite)\b/i.test(lower)) return 'food_delivery';
+    if (/\b(?:aws|spend|spends|cost|costs|bill|bills|finops|cloudcost|infra|cloudspend|trim|decrease|reduce|slash|save\s+money)\b/i.test(lower)) return 'cloud_finops';
+    if (/\b(?:shop|store|storefront|mart|retail|ecommerce|e-commerce|merch|merchandise|boutique|cart|bazaar)\b/i.test(lower)) return 'ecommerce';
+    if (/\b(?:pet|dog|cat|pup|puppy|kitty|kitten|paw|bark|vet|animal|grooming|adopt|shelter)\b/i.test(lower)) return 'pets';
+    if (/\b(?:fitness|fit|gym|workout|exercise|muscle|train|training|yoga|pulse|vital|crossfit|runner|running)\b/i.test(lower)) return 'fitness_wellness';
+    if (/\b(?:real\s*estate|realty|property|rent|rental|house|housing|home|apartment|condo|flat|loft|dwell)\b/i.test(lower)) return 'real_estate';
+    if (/\b(?:ai|gpt|llm|intelligence|agent|smart|neural|model|prompt|bot|machine|copilot)\b/i.test(lower)) return 'ai';
+    if (/\b(?:dev|code|git|api|cloud|deploy|docker|infra|program|engineer|build|server|cli|sdk)\b/i.test(lower)) return 'devtools';
+    if (/\b(?:pay|payment|payments|fin|finance|fintech|money|crypto|invest|trade|bank|banking|cash|invoice|ledger|stock|fund|wallet|token|btc)\b/i.test(lower)) return 'business';
+    if (/\b(?:learn|study|tutor|course|academy|school|teach|education|edtech|scholar|class)\b/i.test(lower)) return 'education';
+    if (/\b(?:travel|trip|flight|hotel|tour|voyage|trek|roam|vacation|nomad|flight)\b/i.test(lower)) return 'travel';
+    if (/\b(?:design|art|ui|ux|photo|video|brand|font|draw|color|media|craft|edit|graphic)\b/i.test(lower)) return 'creative';
     if (/\b(?:hunt|product|directory|launch|curat|curation|discover|find|listing|catalog|shelf)\b/i.test(lower)) return 'curation';
-    if (/\b(?:dev|code|git|api|cloud|deploy|docker|infra|program|engineer|build|server)\b/i.test(lower)) return 'devtools';
-    if (/\b(?:pay|payment|payments|fin|finance|fintech|money|crypto|invest|trade|bank|banking|cash|invoice|ledger|stock|fund)\b/i.test(lower)) return 'business';
-    if (/\b(?:design|art|ui|ux|photo|video|brand|font|draw|color|media|craft|edit)\b/i.test(lower)) return 'creative';
+    if (/\b(?:security|privacy|shield|guard|auth|pass|protect|vpn|cyber|safe|lock|vault)\b/i.test(lower)) return 'security';
+    if (/\b(?:market|marketing|seo|growth|ads|advert|traffic|sales|lead|funnel|viral)\b/i.test(lower)) return 'marketing';
+    if (/\b(?:task|todo|notes|productivity|notion|calendar|schedule|organize|collab|workflow)\b/i.test(lower)) return 'productivity';
+    
     return 'curation';
   }
 
   /**
+   * Normalize and extract root forms for a single word
+   * @param {string} word
+   * @returns {string[]}
+   */
+  function normalizeWordRoots(word) {
+    const clean = word.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (clean.length < 2) return [];
+
+    const roots = new Set([clean]);
+
+    // Handle common plurals (do not strip if ending in 'ss' like fitness)
+    if (clean.endsWith('s') && !clean.endsWith('ss') && clean.length > 3) {
+      roots.add(clean.slice(0, -1));
+    }
+    // Handle 'ies' -> 'y' (e.g. deliveries -> delivery)
+    if (clean.endsWith('ies') && clean.length > 4) {
+      roots.add(clean.slice(0, -3) + 'y');
+    }
+    // Handle 'ing' -> base (e.g. tracking -> track)
+    if (clean.endsWith('ing') && clean.length > 5) {
+      roots.add(clean.slice(0, -3));
+    }
+    // Handle 'er' / 'ers' (e.g. tracker -> track, roasters -> roast)
+    if (clean.endsWith('ers') && clean.length > 5) {
+      roots.add(clean.slice(0, -3));
+    } else if (clean.endsWith('er') && clean.length > 4) {
+      roots.add(clean.slice(0, -2));
+    }
+
+    return Array.from(roots);
+  }
+
+  /**
+   * Dissect user prompt into primary subject anchors and domain modifiers
+   * @param {string[]} keywords
+   * @param {string} prompt
+   * @returns {{ subjectRoots: string[], modifiers: string[], userKeywords: string[] }}
+   */
+  function dissectPromptSemantics(keywords, prompt) {
+    const lowerPrompt = prompt.toLowerCase();
+    const subjectRoots = new Set();
+    const modifiers = new Set();
+    const userKeywords = [];
+
+    // 1. Check for specific subject entities in prompt
+    for (const [entityKey, roots] of Object.entries(SUBJECT_ENTITIES)) {
+      if (lowerPrompt.includes(entityKey) || keywords.some(k => k === entityKey || k.includes(entityKey))) {
+        roots.forEach(r => subjectRoots.add(r));
+      }
+    }
+
+    // 2. Check for specific intent modifiers in prompt
+    for (const [intentKey, mods] of Object.entries(INTENT_MODIFIERS)) {
+      if (lowerPrompt.includes(intentKey) || keywords.some(k => k === intentKey || k.includes(intentKey))) {
+        mods.forEach(m => modifiers.add(m));
+      }
+    }
+
+    // 3. Process direct raw keywords
+    keywords.forEach(kw => {
+      const stems = normalizeWordRoots(kw);
+      stems.forEach(s => {
+        if (s.length >= 2 && s.length <= 10) {
+          userKeywords.push(s);
+          // If no predefined subject was matched, treat all keywords as subject roots
+          if (subjectRoots.size === 0) {
+            subjectRoots.add(s);
+          }
+        }
+      });
+    });
+
+    // 4. Enrich modifiers from detected category
+    const cat = detectCategory(prompt);
+    const catWords = INDUSTRY_DICTIONARIES[cat] || INDUSTRY_DICTIONARIES.curation;
+    catWords.slice(0, 15).forEach(cw => modifiers.add(cw));
+
+    // Fallback if subjectRoots is still empty
+    if (subjectRoots.size === 0) {
+      subjectRoots.add('launch');
+      subjectRoots.add('scout');
+    }
+
+    return {
+      subjectRoots: Array.from(subjectRoots),
+      modifiers: Array.from(modifiers),
+      userKeywords
+    };
+  }
+
+  /**
+   * Calculate brandability and phonetic appeal score (higher is better)
+   * @param {string} name
+   * @param {string[]} subjectRoots
+   * @param {string[]} userKeywords
+   * @returns {number}
+   */
+  function scoreBrandability(name, subjectRoots, userKeywords) {
+    if (!name || name.length < 3 || name.length > 15) return -100;
+    
+    let score = 50;
+
+    // Sweet spot length for startup brands: 5 to 9 characters
+    if (name.length >= 5 && name.length <= 9) {
+      score += 40;
+    } else if (name.length === 10 || name.length === 11) {
+      score += 25;
+    } else if (name.length === 4 || name.length === 12) {
+      score += 15;
+    } else if (name.length > 13) {
+      score -= 30;
+    }
+
+    // Subject Root relevance (primary anchor bonus)
+    const lower = name.toLowerCase();
+    for (const root of subjectRoots) {
+      if (lower.startsWith(root) || lower.endsWith(root)) {
+        score += 60;
+        break;
+      } else if (lower.includes(root)) {
+        score += 40;
+        break;
+      }
+    }
+
+    // Additional boost if directly contains raw user keyword
+    for (const uk of userKeywords) {
+      if (lower.includes(uk)) {
+        score += 20;
+        break;
+      }
+    }
+
+    // Penalize 5 consecutive consonants or 3 consecutive identical letters
+    if (/[bcdfghjklmnpqrstvwxz]{5,}/i.test(name)) score -= 40;
+    if (/(.)\1\1/i.test(name)) score -= 50;
+
+    // Reward healthy vowel-consonant flow
+    const vowels = (name.match(/[aeiouy]/gi) || []).length;
+    const ratio = vowels / name.length;
+    if (ratio >= 0.28 && ratio <= 0.52) {
+      score += 15;
+    }
+
+    return score;
+  }
+
+  /**
    * Smart Client-Side Semantic AI Naming Brain
-   * Generates creative, distinct, high-brandability startup names without needing any API key.
+   * Generates creative, highly relevant, brandable startup and domain names without needing any API key.
    * 
    * @param {string} prompt - User prompt / topic
    * @param {Set<string>|Array<string>} [excludedNames] - Names already taken or used in previous rounds
@@ -112,80 +398,135 @@
   function generateWithSmartBrain(prompt, excludedNames = new Set(), count = 15) {
     const exclusions = excludedNames instanceof Set ? excludedNames : new Set(excludedNames || []);
     const keywords = extractKeywords(prompt);
-    const category = detectCategory(prompt);
-    const catWords = INDUSTRY_DICTIONARY[category] || INDUSTRY_DICTIONARY.curation;
-    const prefixes = INDUSTRY_DICTIONARY.prefixes;
-    const suffixes = INDUSTRY_DICTIONARY.suffixes;
-    const abstractRoots = INDUSTRY_DICTIONARY.abstractRoots;
+    const { subjectRoots, modifiers, userKeywords } = dissectPromptSemantics(keywords, prompt);
 
-    const generated = new Set();
+    const candidatesWithMeta = [];
+    const seenNames = new Set();
 
-    // Helper to add clean name if not excluded
-    function tryAdd(candidate) {
+    function addCandidate(candidate, tier, type, primaryRoot = '') {
       if (!candidate) return;
       const clean = candidate.toLowerCase().replace(/[^a-z0-9]/g, '');
-      if (clean.length >= 3 && clean.length <= 16 && !exclusions.has(clean) && !generated.has(clean)) {
-        generated.add(clean);
+      if (clean.length >= 4 && clean.length <= 15 && !exclusions.has(clean) && !seenNames.has(clean)) {
+        seenNames.add(clean);
+        const score = scoreBrandability(clean, subjectRoots, userKeywords) + (tier * 12);
+        candidatesWithMeta.push({ name: clean, score, tier, type, primaryRoot: primaryRoot || clean });
       }
     }
 
-    // Pattern 1: Keyword + Category Word (e.g. "HuntScout", "LaunchShelf", "SpotStack")
-    keywords.forEach(kw => {
-      catWords.forEach(cw => {
-        if (kw !== cw) {
-          tryAdd(`${kw}${cw}`);
-          tryAdd(`${cw}${kw}`);
+    // TIER 1: Primary Subject Roots + High-Affinity Modifiers
+    // Examples:
+    // "pokemon store" -> pokemart, pokevault, pokestore, pokeshop, pokedeck, pokebox, pokedrop
+    // "decrease aws spends" -> awscut, awstrim, awscost, awsspend, awsopt, cloudtrim, cloudcut, spendcut, costcut, spendless
+    // "coffee shop" -> coffeebar, coffeelab, coffeecup, coffeeden, coffeebox, coffeecraft, brewbar, brewlab
+    // "food delivery" -> fooddash, fooddrop, foodswift, foodbite, mealdash, mealdrop, eatsdash
+    subjectRoots.forEach(root => {
+      modifiers.forEach(mod => {
+        if (root !== mod && !root.includes(mod) && !mod.includes(root)) {
+          // Direct Compound: [root][mod]
+          addCandidate(`${root}${mod}`, 6, 'compound-direct', root);
+          // Inverted Compound: [mod][root]
+          if (mod.length <= 6) {
+            addCandidate(`${mod}${root}`, 5, 'compound-inverted', root);
+          }
         }
       });
     });
 
-    // Pattern 2: Prefix + Keyword (e.g. "GetLaunch", "NovaScout", "ZenHunt", "HyperSpot")
-    keywords.forEach(kw => {
-      prefixes.forEach(p => {
-        tryAdd(`${p}${kw}`);
-      });
-    });
-
-    // Pattern 3: Keyword + Modern Brandable Suffix (e.g. "Launchly", "Scoutify", "Huntbase", "Spotflow")
-    keywords.forEach(kw => {
-      suffixes.forEach(s => {
-        tryAdd(`${kw}${s}`);
-      });
-    });
-
-    // Pattern 4: Abstract Root + Suffix / Keyword portmanteau (e.g. "Noviqo", "Brevio", "Veltis", "Nexflow")
-    abstractRoots.forEach(ar => {
-      suffixes.forEach(s => {
-        tryAdd(`${ar}${s}`);
-      });
-      keywords.forEach(kw => {
-        tryAdd(`${ar}${kw}`);
-      });
-    });
-
-    // Pattern 5: Direct Category Word + Suffix combinations
-    catWords.forEach(cw => {
-      suffixes.forEach(s => {
-        if (cw !== s) {
-          tryAdd(`${cw}${s}`);
+    // Cross-combine direct user keywords if multiple provided (e.g. pokemonstore, awscost, fooddelivery)
+    for (let i = 0; i < keywords.length; i++) {
+      for (let j = 0; j < keywords.length; j++) {
+        if (i !== j) {
+          addCandidate(`${keywords[i]}${keywords[j]}`, 6, 'keyword-pair', keywords[i]);
         }
-      });
-      prefixes.forEach(p => {
-        if (p !== cw) {
-          tryAdd(`${p}${cw}`);
-        }
-      });
-    });
-
-    // Convert to array and shuffle for natural variety
-    const pool = Array.from(generated);
-    for (let i = pool.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [pool[i], pool[j]] = [pool[j], pool[i]];
+      }
     }
 
-    return pool.slice(0, count);
+    // TIER 2: Action & Brand Prefixes + Subject Roots
+    // Examples: getpoke, trypoke, gopoke, saveaws, cutcloud, dailybrew, purebrew, getmeal, trydash, getcrypto, gofit
+    subjectRoots.forEach(root => {
+      BRAND_PREFIXES.forEach(prefix => {
+        if (prefix !== root && !root.startsWith(prefix)) {
+          addCandidate(`${prefix}${root}`, 5, 'prefix', root);
+        }
+      });
+    });
+
+    // TIER 3: Subject Roots + High-Converting Startup Suffixes
+    // Examples: pokely, pokeify, pokehq, pokebox, pokedrop, awsly, cloudly, spendly, coffeely, brewbase, foodly, dashly, cryptoly
+    subjectRoots.forEach(root => {
+      BRAND_SUFFIXES.forEach(suffix => {
+        if (suffix !== root && !root.endsWith(suffix)) {
+          addCandidate(`${root}${suffix}`, 5, 'suffix', root);
+        }
+      });
+    });
+
+    // TIER 4: Portmanteau / Syllable Overlap Blends (e.g. poke + market -> pokemart, cloud + optimize -> cloudopt)
+    subjectRoots.forEach(r1 => {
+      modifiers.forEach(r2 => {
+        if (r1 !== r2) {
+          for (let len = 3; len >= 1; len--) {
+            if (r1.length > len && r2.length > len) {
+              const r1End = r1.slice(-len);
+              const r2Start = r2.slice(0, len);
+              if (r1End === r2Start) {
+                const blended = r1 + r2.slice(len);
+                addCandidate(blended, 6, 'portmanteau', r1);
+              }
+            }
+          }
+        }
+      });
+    });
+
+    // TIER 5: Fallback modifier combinations if candidate pool is small
+    if (candidatesWithMeta.length < count * 2) {
+      modifiers.forEach(mod => {
+        BRAND_PREFIXES.slice(0, 6).forEach(p => addCandidate(`${p}${mod}`, 3, 'fallback-prefix', mod));
+        BRAND_SUFFIXES.slice(0, 6).forEach(s => addCandidate(`${mod}${s}`, 3, 'fallback-suffix', mod));
+      });
+    }
+
+    // Sort by calculated score descending
+    candidatesWithMeta.sort((a, b) => b.score - a.score);
+
+    // Multi-dimensional diversification: balance across root anchors and generation types
+    const selected = [];
+    const rootCounts = {};
+    const typeCounts = {};
+    const maxPerRoot = Math.max(3, Math.ceil(count / Math.max(2, subjectRoots.length)));
+    const maxPerType = Math.max(3, Math.ceil(count / 3));
+
+    // First pass: select top candidates honoring root & type caps
+    for (const item of candidatesWithMeta) {
+      if (selected.length >= count) break;
+
+      const rKey = item.primaryRoot;
+      const tKey = item.type;
+      rootCounts[rKey] = (rootCounts[rKey] || 0);
+      typeCounts[tKey] = (typeCounts[tKey] || 0);
+
+      if (rootCounts[rKey] < maxPerRoot && typeCounts[tKey] < maxPerType) {
+        selected.push(item.name);
+        rootCounts[rKey]++;
+        typeCounts[tKey]++;
+      }
+    }
+
+    // Second pass: fill remaining slots by relaxed criteria
+    if (selected.length < count) {
+      for (const item of candidatesWithMeta) {
+        if (!selected.includes(item.name)) {
+          selected.push(item.name);
+          if (selected.length >= count) break;
+        }
+      }
+    }
+
+    return selected.slice(0, count);
   }
+
+
 
   /**
    * Format the AI prompt including taken-domain exclusions for LLMs
@@ -351,11 +692,11 @@ Please suggest ${count} BRAND NEW, DIFFERENT domain name ideas for "${prompt}".
   }
 
   const ENGINE_DISPLAY_NAMES = {
-    'smart_brain': 'Smart Brain (Offline)',
+    'openrouter': 'OpenRouter',
     'openai': 'OpenAI (GPT-4o mini)',
     'gemini': 'Google Gemini',
     'groq': 'Groq (Llama 3)',
-    'openrouter': 'OpenRouter'
+    'smart_brain': 'Smart Brain (Offline)'
   };
 
   /**

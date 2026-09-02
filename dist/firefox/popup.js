@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let searchTerm = '';
   let isChecking = false;
   let starredDomains = new Set();
-  let aiProvider = 'smart_brain';
+  let aiProvider = 'openrouter';
   let aiApiKeys = {}; // per-provider key map: { openai: '...', gemini: '...', groq: '...', openrouter: '...' }
   let aiModelOverride = ''; // selected free model for OpenRouter
   let aiTargetCount = 10;
@@ -437,7 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (data.aiProvider) {
         const optionExists = aiProviderSelect && Array.from(aiProviderSelect.options).some(opt => opt.value === data.aiProvider);
-        aiProvider = optionExists ? data.aiProvider : 'smart_brain';
+        aiProvider = optionExists ? data.aiProvider : 'openrouter';
         if (aiProviderSelect) aiProviderSelect.value = aiProvider;
       }
       if (data.aiApiKeys && typeof data.aiApiKeys === 'object') {

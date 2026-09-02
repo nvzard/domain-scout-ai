@@ -82,9 +82,10 @@ domain-checker-extension/
 - **Concept-to-Domain Ideator**: Simply describe your product, startup, or project idea (e.g. *"Suggest domain ideas for a Product Hunt alternative for indie hackers"*).
 - **Autonomous Multi-Round Reiteration Loop**: If generated domains are registered/taken, the AI automatically re-prompts with taken exclusions, hunting across rounds until available domains matching your concept are found!
 - **Multi-Provider Client-Side AI (Zero Backend Needed)**:
-  - **Auto (Recommended)**: Intelligently selects best available local AI or session engine.
-  - **ChatGPT Web Session**: Uses active browser session credentials on `chatgpt.com`.
-  - **Chrome Browser AI (`window.ai` / Gemini Nano)**: Leverages built-in on-device AI in supported Chrome environments.
+  - **OpenRouter (Free & Fast)**: Access free models (Auto Router, Llama 3.3, DeepSeek, Gemini, etc.) and fast cloud routing with your OpenRouter API key.
+  - **OpenAI**: GPT-4o mini for high-quality domain naming via your OpenAI API key.
+  - **Google Gemini**: Fast and creative domain idea generation via Google Gemini API.
+  - **Groq**: Ultra-low-latency Llama 3 inference via Groq API.
   - **Smart Brain (Offline / Instant)**: 100% client-side, zero-config, instant startup brand naming engine using linguistic roots and industry vocabulary graphs.
 - **Inspiration Quick Chips**: 1-click starter prompts for SaaS, AI Assistants, Dev Tools, Design Studios, and FinTech.
 - **Target Available Domains**: Hunts until 10 available domains are found across iterative rounds.

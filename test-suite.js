@@ -273,9 +273,47 @@ async function testOpenRouterParsing() {
   console.log('✓ Passed OpenRouter Response Extraction & Fallback tests');
 }
 
+// Test 13: Semantic Smart Brain Quality on Real-World User Queries
+console.log('\nTest 13: Semantic Smart Brain Quality on Real-World User Queries');
+function testSmartBrainSemanticQuality() {
+  // 1. "pokemon store"
+  const pokemonResults = AiGenerator.generateWithSmartBrain('pokemon store', new Set(), 15);
+  assert.strictEqual(pokemonResults.length, 15);
+  const pokemonMatches = pokemonResults.filter(name => /poke|pokemon|mon|mart|vault|deck/i.test(name));
+  assert.ok(pokemonMatches.length >= 10, `Expected at least 10 pokemon-relevant names, got ${pokemonMatches.length}: ${pokemonResults.join(', ')}`);
+
+  // 2. "service to decrease aws spends"
+  const awsResults = AiGenerator.generateWithSmartBrain('service to decrease aws spends', new Set(), 15);
+  assert.strictEqual(awsResults.length, 15);
+  const awsMatches = awsResults.filter(name => /aws|cloud|spend|cost|cut|trim|save|less|opt|guard|slash/i.test(name));
+  assert.ok(awsMatches.length >= 10, `Expected at least 10 AWS cost-cutting relevant names, got ${awsMatches.length}: ${awsResults.join(', ')}`);
+
+  // 3. "coffee shop"
+  const coffeeResults = AiGenerator.generateWithSmartBrain('coffee shop', new Set(), 15);
+  assert.strictEqual(coffeeResults.length, 15);
+  const coffeeMatches = coffeeResults.filter(name => /coffee|brew|roast|cafe|bean|bar|cup|sip|espresso/i.test(name));
+  assert.ok(coffeeMatches.length >= 10, `Expected at least 10 coffee relevant names, got ${coffeeMatches.length}: ${coffeeResults.join(', ')}`);
+
+  // 4. "food delivery app"
+  const foodResults = AiGenerator.generateWithSmartBrain('food delivery app', new Set(), 15);
+  assert.strictEqual(foodResults.length, 15);
+  const foodMatches = foodResults.filter(name => /food|meal|eats|bite|dash|drop|swift|express/i.test(name));
+  assert.ok(foodMatches.length >= 10, `Expected at least 10 food delivery relevant names, got ${foodMatches.length}: ${foodResults.join(', ')}`);
+
+  // 5. "crypto payments"
+  const cryptoResults = AiGenerator.generateWithSmartBrain('crypto payments', new Set(), 15);
+  assert.strictEqual(cryptoResults.length, 15);
+  const cryptoMatches = cryptoResults.filter(name => /crypto|pay|coin|token|wallet|chain|mint/i.test(name));
+  assert.ok(cryptoMatches.length >= 10, `Expected at least 10 crypto payment relevant names, got ${cryptoMatches.length}: ${cryptoResults.join(', ')}`);
+
+  console.log('✓ Passed Semantic Smart Brain Quality tests on all key queries');
+}
+testSmartBrainSemanticQuality();
+
 Promise.all([testReiterationLoop(), testOpenRouterParsing()]).then(() => {
-  console.log('\n🎉 ALL 12 TEST SUITES PASSED SUCCESSFULLY!');
+  console.log('\n🎉 ALL 13 TEST SUITES PASSED SUCCESSFULLY!');
 }).catch(err => {
   console.error('\n❌ Test failed:', err);
   process.exit(1);
 });
+
