@@ -90,14 +90,20 @@ Used strictly client-side to verify active session authentication on chatgpt.com
 
 ---
 
-## 🎨 Asset Requirements
+## 🎨 Store Asset Inventory
 
-| Platform | Asset | Size | Source in Project |
+All promo assets and screenshots have been generated in [`store-assets/`](file:///Users/nitanshu/workspace/browser-extentions/domain-scout/store-assets):
+
+| Asset | Dimensions | File Formats | Purpose |
 | :--- | :--- | :--- | :--- |
-| **All** | Extension Icon | 128 x 128 px | `src/icons/icon-128.png` |
-| **Chrome** | Small Promo Tile (optional) | 440 x 280 px | PNG / JPEG |
-| **Chrome** | Screenshot 1 (Search Results) | 1280 x 800 px (or 640 x 400) | PNG |
-| **Firefox** | Add-on Icon | 64 x 64 px | `src/icons/icon-48.png` or `icon-128.png` |
+| **Marquee Promo Tile** | 1400 x 560 px | `promo-marquee-1400x560.png`, `.jpg` | Chrome Web Store Marquee Promo |
+| **Small Promo Tile** | 440 x 280 px | `promo-small-440x280.png`, `.jpg` | Chrome Web Store Small Promo Tile |
+| **Screenshot 1** | 1280 x 800 px | `screenshot-1-search-input.jpg` | Brainstorm Domain Names Fast with AI |
+| **Screenshot 2** | 1280 x 800 px | `screenshot-2-results-overview.jpg` | 10 Available Found — Autonomous Multi-Round Hunt |
+| **Screenshot 3** | 1280 x 800 px | `screenshot-3-registrars-continue.jpg` | Manual Bulk Search — ChatGPT Lists & Variations |
+| **Screenshot 4** | 1280 x 800 px | `screenshot-4-aftermarket-pricing.jpg` | 1-Click Registrar Comparison & Purchase |
+| **Screenshot 5** | 1280 x 800 px | `screenshot-5-favorites-export.jpg` | Starred Shortlists, Aftermarket Pricing & Reports |
+| **Extension Icon** | 128 x 128 px | `src/icons/icon-128.png` | Store Listing App Icon |
 
 ---
 
@@ -105,10 +111,11 @@ Used strictly client-side to verify active session authentication on chatgpt.com
 
 1. **Google Chrome Web Store Dashboard:**
    👉 https://chrome.google.com/webstore/devconsole/
-   - Click **"New Item"** -> Upload `packages/domain-scout-chrome-v1.0.1.zip`
-   - Paste the Store Listing details above -> Submit for review.
+   - Upload package: `packages/domain-scout-chrome-v1.1.0.zip`
+   - Upload screenshots: `store-assets/screenshot-1-search-input.jpg` through `screenshot-5-favorites-export.jpg`
+   - Upload promo tiles: `store-assets/promo-small-440x280.png` & `store-assets/promo-marquee-1400x560.png`
 
 2. **Mozilla Firefox Add-on Developer Hub (AMO):**
    👉 https://addons.mozilla.org/developers/
-   - Click **"Submit a New Add-on"** -> Upload `packages/domain-scout-firefox-v1.0.1.zip`
+   - Upload package: `packages/domain-scout-firefox-v1.1.0.zip`
    - Paste the Summary/Description above -> Submit for review.

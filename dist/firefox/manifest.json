@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Domain Scout AI - Fast Domain Search",
   "version": "1.1.0",
-  "description": "Instant bulk domain availability checker for .com, .io, .ai and more via InstantDomainSearch.",
+  "description": "AI domain name ideator & instant bulk availability checker for .com, .io, .ai and more. Hunt available startup names in seconds.",
   "author": "Zulu",
   "browser_specific_settings": {
     "gecko": {
