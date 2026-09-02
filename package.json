@@ -1,6 +1,6 @@
 {
-  "name": "domain-availability-checker-extension",
-  "version": "1.0.1",
+  "name": "domain-scout-ai-extension",
+  "version": "1.1.0",
   "description": "Cross-browser domain availability checker extension for Google Chrome and Mozilla Firefox.",
   "scripts": {
     "test": "node test-suite.js",

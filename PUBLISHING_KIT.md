@@ -1,4 +1,4 @@
-# 🚀 Domain Scout — Store Listing & Publishing Kit
+# 🚀 Domain Scout AI — Store Listing & Publishing Kit
 
 This document contains ready-to-copy-paste metadata, descriptions, screenshots guide, and privacy disclosures required for publishing to the **Google Chrome Web Store** and **Mozilla Firefox Add-ons (AMO)**.
 
@@ -7,8 +7,8 @@ This document contains ready-to-copy-paste metadata, descriptions, screenshots g
 ## 📦 Ready-to-Upload Packages
 
 Built packages are located in the `packages/` directory:
-- **Chrome Web Store package:** `packages/domain-scout-chrome-v1.0.1.zip`
-- **Firefox Add-on package:** `packages/domain-scout-firefox-v1.0.1.zip`
+- **Chrome Web Store package:** `packages/domain-scout-chrome-v1.1.0.zip`
+- **Firefox Add-on package:** `packages/domain-scout-firefox-v1.1.0.zip`
 
 ---
 
@@ -16,17 +16,17 @@ Built packages are located in the `packages/` directory:
 
 ### Extension Title
 ```
-Domain Scout - Fast Domain Search
+Domain Scout AI - Fast Domain Search
 ```
 
 ### Short Description (max 132 chars)
 ```
-Instant bulk domain availability checker for .com, .io, .ai and more. Compare registrars, shortlist favorites & find startup names.
+Instant AI & bulk domain availability checker for .com, .io, .ai. Hunt 10 available startup names with AI, compare registrars & favorites.
 ```
 
 ### Detailed Description (Markdown / Text)
 ```markdown
-⚡ Domain Scout — Fast Bulk Domain Search & Availability Checker
+⚡ Domain Scout AI — Fast Bulk Domain Search & AI Availability Ideator
 
 Find and register your next startup, project, or brand name in seconds. Domain Scout is a high-performance browser extension that checks real-time domain availability and marketplace pricing across top TLDs (.com, .io, .ai, .co, .dev, .app, and more).
 

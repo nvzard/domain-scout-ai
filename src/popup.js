@@ -1,25 +1,51 @@
 /**
- * Popup Controller for Domain Availability Checker
+ * Popup Controller for Domain Scout
+ * Dual-Mode AI Scout & Manual Bulk Domain Checker
  * Cross-browser compatible (Google Chrome, Firefox, Edge, Brave, etc.)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
   // State
+  let currentMode = 'ai'; // 'ai' | 'manual'
   let preferredTlds = ['com', 'io', 'ai'];
   let currentResults = [];
   let currentFilter = 'available'; // 'available' | 'all' | 'aftermarket' | 'starred'
   let searchTerm = '';
   let isChecking = false;
   let starredDomains = new Set();
+  let aiProvider = 'auto';
+  let aiTargetCount = 10;
+  let lastAiMeta = null;
 
-  // DOM Elements
+  // DOM Elements - Navigation & Modes
+  const tabModeAi = document.getElementById('tabModeAi');
+  const tabModeManual = document.getElementById('tabModeManual');
+  const sectionAi = document.getElementById('sectionAi');
+  const sectionManual = document.getElementById('sectionManual');
+
+  // DOM Elements - AI Mode
+  const aiPromptInput = document.getElementById('aiPromptInput');
+  const btnClearAiPrompt = document.getElementById('btnClearAiPrompt');
+  const inspirationChips = document.getElementById('inspirationChips');
+  const aiProviderSelect = document.getElementById('aiProviderSelect');
+  const btnAiGenerate = document.getElementById('btnAiGenerate');
+  const btnAiGenerateText = document.getElementById('btnAiGenerateText');
+  const aiKeyboardHint = document.getElementById('aiKeyboardHint');
+
+  // DOM Elements - AI Progress Stepper
+  const aiProgressCard = document.getElementById('aiProgressCard');
+  const aiRoundBadge = document.getElementById('aiRoundBadge');
+  const aiProgressMsg = document.getElementById('aiProgressMsg');
+  const aiProgressBarFill = document.getElementById('aiProgressBarFill');
+  const aiFoundCount = document.getElementById('aiFoundCount');
+
+  // DOM Elements - AI Summary Banner
+  const aiSummaryBanner = document.getElementById('aiSummaryBanner');
+  const aiBannerTitle = document.getElementById('aiBannerTitle');
+  const aiBannerSub = document.getElementById('aiBannerSub');
+
+  // DOM Elements - Manual Mode
   const domainInput = document.getElementById('domainInput');
-  const tldChipsContainer = document.getElementById('tldChipsContainer');
-  const newTldInput = document.getElementById('newTldInput');
-  const btnAddTld = document.getElementById('btnAddTld');
-  const btnResetTlds = document.getElementById('btnResetTlds');
-  const quickTldButtons = document.querySelectorAll('.tld-quick-pill');
-
   const btnVariations = document.getElementById('btnVariations');
   const btnSample = document.getElementById('btnSample');
   const btnClearInput = document.getElementById('btnClearInput');
@@ -27,11 +53,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnCheckText = document.getElementById('btnCheckText');
   const keyboardHint = document.getElementById('keyboardHint');
 
+  // DOM Elements - Manual Progress Bar
   const progressContainer = document.getElementById('progressContainer');
   const progressBarFill = document.getElementById('progressBarFill');
   const progressText = document.getElementById('progressText');
   const progressPercent = document.getElementById('progressPercent');
 
+  // DOM Elements - Shared TLD Preferences
+  const tldChipsContainer = document.getElementById('tldChipsContainer');
+  const newTldInput = document.getElementById('newTldInput');
+  const btnAddTld = document.getElementById('btnAddTld');
+  const btnResetTlds = document.getElementById('btnResetTlds');
+  const quickTldButtons = document.querySelectorAll('.tld-quick-pill');
+
+  // DOM Elements - Results Dashboard
   const resultsDashboard = document.getElementById('resultsDashboard');
   const countAvailable = document.getElementById('countAvailable');
   const countTaken = document.getElementById('countTaken');
@@ -157,7 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return `https://web.archive.org/web/*/${encodeURIComponent(domain)}`;
   }
 
-  // Smart Variations Generator
+  // Smart Variations Generator for Manual Mode
   const VARIATION_PREFIXES = ['get', 'try', 'use', 'go', 'join', 'my', 'the', 'hey', 'we', 'all', 'open', 'pure', 'true', 'smart'];
   const VARIATION_SUFFIXES = ['app', 'hq', 'base', 'hub', 'flow', 'ly', 'ify', 'lab', 'space', 'stack', 'pro', 'box', 'studio', 'craft'];
 
@@ -196,7 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderResults();
   }
 
-  // Sample data showcasing ChatGPT output formats
+  // Sample data for manual testing
   const sampleDomains = [
     "1. **LaunchScout** (.com, .io, .ai) — Curated discovery platform",
     "2. **Noviqo** (com / co) — Modern AI assistant",
@@ -210,7 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
     "10. DataPulse"
   ];
 
-  // Cross-browser Storage Helpers
+  // Storage Engine
   const storageEngine = (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local)
     ? chrome.storage.local
     : (typeof browser !== 'undefined' && browser.storage && browser.storage.local ? browser.storage.local : null);
@@ -228,7 +263,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       });
     } else {
-      // LocalStorage fallback
       const out = {};
       for (const k of keys) {
         const val = localStorage.getItem(`dc_${k}`);
@@ -252,18 +286,67 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Detect if the browser is Chrome-supported and not Firefox
+  function isChromeSupportedBrowser() {
+    if (typeof navigator === 'undefined') return false;
+    const ua = navigator.userAgent.toLowerCase();
+    const isFirefox = ua.includes('firefox') || ua.includes('fxios');
+    if (isFirefox) return false;
+    const isChromium = ua.includes('chrome') || ua.includes('chromium') || ua.includes('edg');
+    const hasAi = typeof window !== 'undefined' && !!(window.ai && window.ai.languageModel);
+    return isChromium || hasAi;
+  }
+
+  function setupAiProviderOptions() {
+    const isChromeSupported = isChromeSupportedBrowser();
+    const optChromeAi = document.getElementById('optChromeAi') || (aiProviderSelect && aiProviderSelect.querySelector('option[value="chrome_ai"]'));
+    if (!isChromeSupported && optChromeAi) {
+      optChromeAi.remove();
+      if (aiProvider === 'chrome_ai') {
+        aiProvider = 'auto';
+      }
+    }
+  }
+
   // Load Persisted State
   async function loadPersistedState() {
+    setupAiProviderOptions();
+
     try {
-      const data = await getStoredData(['domainInput', 'preferredTlds', 'lastResults', 'currentFilter', 'starredDomains']);
+      const data = await getStoredData([
+        'currentMode',
+        'aiPrompt',
+        'aiProvider',
+        'domainInput',
+        'preferredTlds',
+        'lastResults',
+        'currentFilter',
+        'starredDomains',
+        'lastAiMeta'
+      ]);
+
+      if (data.currentMode) {
+        currentMode = data.currentMode;
+      }
       if (data.preferredTlds && Array.isArray(data.preferredTlds) && data.preferredTlds.length > 0) {
         preferredTlds = data.preferredTlds;
+      }
+      if (data.aiPrompt) {
+        aiPromptInput.value = data.aiPrompt;
+      }
+      if (data.aiProvider) {
+        const optionExists = aiProviderSelect && Array.from(aiProviderSelect.options).some(opt => opt.value === data.aiProvider);
+        aiProvider = optionExists ? data.aiProvider : 'auto';
+        if (aiProviderSelect) aiProviderSelect.value = aiProvider;
       }
       if (data.domainInput) {
         domainInput.value = data.domainInput;
       }
       if (data.starredDomains && Array.isArray(data.starredDomains)) {
         starredDomains = new Set(data.starredDomains);
+      }
+      if (data.lastAiMeta) {
+        lastAiMeta = data.lastAiMeta;
       }
       if (data.lastResults && Array.isArray(data.lastResults) && data.lastResults.length > 0) {
         currentResults = data.lastResults;
@@ -273,17 +356,23 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {
       console.warn('Could not load storage state', e);
     }
+
+    switchMode(currentMode, false);
     renderTldChips();
   }
 
   async function persistState() {
     try {
       await setStoredData({
+        currentMode,
+        aiPrompt: aiPromptInput.value,
+        aiProvider,
         domainInput: domainInput.value,
         preferredTlds,
         lastResults: currentResults,
         currentFilter,
-        starredDomains: Array.from(starredDomains)
+        starredDomains: Array.from(starredDomains),
+        lastAiMeta
       });
     } catch (e) {
       console.warn('Could not save storage state', e);
@@ -459,6 +548,61 @@ document.addEventListener('DOMContentLoaded', () => {
     return btn;
   }
 
+  // Mode Switcher
+  function switchMode(mode, doPersist = true) {
+    currentMode = mode;
+    if (mode === 'ai') {
+      tabModeAi.classList.add('active');
+      tabModeManual.classList.remove('active');
+      sectionAi.classList.remove('hidden');
+      sectionManual.classList.add('hidden');
+    } else {
+      tabModeManual.classList.add('active');
+      tabModeAi.classList.remove('active');
+      sectionManual.classList.remove('hidden');
+      sectionAi.classList.add('hidden');
+    }
+
+    if (doPersist) {
+      persistState();
+    }
+  }
+
+  tabModeAi.addEventListener('click', () => switchMode('ai'));
+  tabModeManual.addEventListener('click', () => switchMode('manual'));
+
+  // Inspiration Chips
+  if (inspirationChips) {
+    inspirationChips.addEventListener('click', (e) => {
+      const chip = e.target.closest('.chip-pill');
+      if (chip) {
+        const promptText = chip.getAttribute('data-prompt');
+        if (promptText) {
+          aiPromptInput.value = promptText;
+          aiPromptInput.focus();
+          persistState();
+          showToast('Inspiration prompt loaded');
+        }
+      }
+    });
+  }
+
+  // AI Prompt Clear
+  btnClearAiPrompt.addEventListener('click', () => {
+    aiPromptInput.value = '';
+    persistState();
+    showToast('AI prompt cleared');
+  });
+
+  aiPromptInput.addEventListener('input', () => {
+    persistState();
+  });
+
+  aiProviderSelect.addEventListener('change', (e) => {
+    aiProvider = e.target.value;
+    persistState();
+  });
+
   // Render TLD Chips
   function renderTldChips() {
     tldChipsContainer.textContent = '';
@@ -534,7 +678,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Sample & Clear
+  // Sample & Clear for Manual Mode
   btnSample.addEventListener('click', () => {
     domainInput.value = sampleDomains.join('\n');
     persistState();
@@ -553,10 +697,8 @@ document.addEventListener('DOMContentLoaded', () => {
     persistState();
   });
 
-  // Dynamic OS-adaptive shortcut hint (⌘+Enter on Mac, Ctrl+Enter on Windows/Linux)
-  // Uses standard navigator APIs - zero extra permissions required
+  // OS-adaptive shortcut hint
   function initKeyboardShortcutHint() {
-    if (!keyboardHint) return;
     let isMac = false;
     if (typeof navigator !== 'undefined') {
       if (navigator.userAgentData && typeof navigator.userAgentData.platform === 'string') {
@@ -567,22 +709,107 @@ document.addEventListener('DOMContentLoaded', () => {
         isMac = /Mac|iPhone|iPod|iPad/i.test(platform) || /Macintosh|Mac OS X/i.test(userAgent);
       }
     }
-    keyboardHint.textContent = isMac ? '⌘+Enter' : 'Ctrl+Enter';
+    const hint = isMac ? '⌘+Enter' : 'Ctrl+Enter';
+    if (keyboardHint) keyboardHint.textContent = hint;
+    if (aiKeyboardHint) aiKeyboardHint.textContent = hint;
   }
 
-  // Keyboard shortcut Cmd/Ctrl + Enter to trigger check
+  // Global Keyboard Shortcut (Cmd/Ctrl + Enter)
   document.addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
       if (!isChecking) {
-        startCheck();
+        if (currentMode === 'ai') {
+          startAiHunt();
+        } else {
+          startManualCheck();
+        }
       }
     }
   });
 
   initKeyboardShortcutHint();
 
-  // Core Check Execution
-  async function startCheck() {
+  // Core AI Mode Execution: Autonomous Reiteration Loop
+  async function startAiHunt() {
+    const prompt = aiPromptInput.value.trim();
+    if (!prompt) {
+      showToast('Please enter a concept or idea for the AI to brainstorm');
+      aiPromptInput.focus();
+      return;
+    }
+
+    if (preferredTlds.length === 0) {
+      showToast('Please add at least one TLD preference');
+      return;
+    }
+
+    isChecking = true;
+    btnAiGenerate.disabled = true;
+    btnAiGenerateText.textContent = 'Hunting Available Domains...';
+
+    // Display AI progress card
+    aiProgressCard.classList.remove('hidden');
+    aiRoundBadge.textContent = 'Round 1/3';
+    aiFoundCount.textContent = '0';
+    aiProgressMsg.textContent = '🤖 Brainstorming domain ideas with AI...';
+    aiProgressBarFill.style.width = '15%';
+
+    try {
+      const huntResult = await AiGenerator.huntAvailableDomains({
+        prompt,
+        defaultTlds: preferredTlds,
+        provider: aiProvider,
+        targetAvailableCount: aiTargetCount,
+        maxRounds: 3,
+        domainCheckerInstance: DomainChecker,
+        onProgress: ({ round, maxRounds, step, message, availableCount, totalChecked }) => {
+          aiRoundBadge.textContent = `Round ${round}/${maxRounds}`;
+          aiProgressMsg.textContent = message;
+          aiFoundCount.textContent = String(availableCount || 0);
+
+          let pct = 20;
+          if (step === 'brainstorming') pct = (round - 1) * 33 + 15;
+          if (step === 'checking') pct = (round - 1) * 33 + 25;
+          if (step === 'analyzing') pct = round * 33;
+          aiProgressBarFill.style.width = `${Math.min(pct, 100)}%`;
+        }
+      });
+
+      aiProgressBarFill.style.width = '100%';
+      currentResults = huntResult.allResults;
+      lastAiMeta = {
+        prompt,
+        rounds: huntResult.rounds,
+        totalChecked: huntResult.totalChecked,
+        availableCount: huntResult.availableCount
+      };
+
+      currentFilter = 'available';
+      renderResults();
+      persistState();
+
+      if (huntResult.availableCount > 0) {
+        showToast(`🎉 Found ${huntResult.availableCount} available domain${huntResult.availableCount > 1 ? 's' : ''} in ${huntResult.rounds} round${huntResult.rounds > 1 ? 's' : ''}!`);
+      } else {
+        showToast(`Check complete across ${huntResult.rounds} rounds. No available domains found.`);
+      }
+    } catch (err) {
+      console.error('AI Hunt failed:', err);
+      showToast(`AI Error: ${err.message || 'Generation failed'}`);
+    } finally {
+      isChecking = false;
+      btnAiGenerate.disabled = false;
+      btnAiGenerateText.textContent = 'Generate & Find Available Domains';
+      setTimeout(() => {
+        aiProgressCard.classList.add('hidden');
+      }, 700);
+    }
+  }
+
+  btnAiGenerate.addEventListener('click', startAiHunt);
+
+  // Manual Mode Check Execution
+  async function startManualCheck() {
     const text = domainInput.value.trim();
     if (!text) {
       showToast('Please enter at least one name or domain');
@@ -603,6 +830,8 @@ document.addEventListener('DOMContentLoaded', () => {
     progressPercent.textContent = '0%';
     progressText.textContent = 'Preparing bulk request...';
 
+    lastAiMeta = null;
+
     try {
       const results = await DomainChecker.checkDomains(text, preferredTlds, {
         batchSize: 50,
@@ -617,7 +846,6 @@ document.addEventListener('DOMContentLoaded', () => {
       currentResults = results;
       const availableList = results.filter(r => r.isAvailable);
 
-      // Auto select available filter if any found, else all
       if (availableList.length > 0) {
         currentFilter = 'available';
       } else {
@@ -645,7 +873,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  btnCheck.addEventListener('click', startCheck);
+  btnCheck.addEventListener('click', startManualCheck);
 
   // Results Rendering & Filtering
   function renderResults() {
@@ -655,6 +883,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     resultsDashboard.classList.remove('hidden');
+
+    // AI Summary Banner display
+    if (lastAiMeta && lastAiMeta.prompt) {
+      aiSummaryBanner.classList.remove('hidden');
+      aiBannerTitle.textContent = `✨ AI Hunt Results: ${lastAiMeta.availableCount} Available Domains`;
+      aiBannerSub.textContent = `Scanned ${lastAiMeta.totalChecked} candidate domains across ${lastAiMeta.rounds} iteration round${lastAiMeta.rounds > 1 ? 's' : ''} for "${lastAiMeta.prompt.slice(0, 45)}${lastAiMeta.prompt.length > 45 ? '...' : ''}"`;
+    } else {
+      aiSummaryBanner.classList.add('hidden');
+    }
 
     const totalCount = currentResults.length;
     const availableItems = currentResults.filter(r => r.isAvailable);
@@ -735,7 +972,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const baseName = item.name;
       const tld = item.tld;
 
-      // 1. Left container (domain name + status badge)
+      // Left container (domain name + status badge)
       const domainLeft = document.createElement('div');
       domainLeft.className = 'domain-left';
 
@@ -755,7 +992,7 @@ document.addEventListener('DOMContentLoaded', () => {
       domainLeft.appendChild(domainName);
       domainLeft.appendChild(statusBadge);
 
-      // 2. Right container (action buttons)
+      // Right container (action buttons)
       const domainRight = document.createElement('div');
       domainRight.className = 'domain-right';
 
@@ -809,7 +1046,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderResults();
   });
 
-  // Variations Button
+  // Variations Button (Manual Mode)
   if (btnVariations) {
     btnVariations.addEventListener('click', () => {
       const currentVal = domainInput.value.trim();
@@ -826,9 +1063,9 @@ document.addEventListener('DOMContentLoaded', () => {
     renderResults();
   });
 
-  // Results List Actions
+  // Results List Delegated Actions
   resultsList.addEventListener('click', (e) => {
-    // 1. Star / Favorite toggle
+    // 1. Star toggle
     const starBtn = e.target.closest('.btn-star');
     if (starBtn) {
       e.stopPropagation();
@@ -837,7 +1074,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // 2. Continue dropdown trigger
+    // 2. Continue dropdown
     const continueBtn = e.target.closest('.btn-continue');
     if (continueBtn) {
       e.stopPropagation();
@@ -968,8 +1205,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const starred = currentResults.filter(r => starredDomains.has(r.domain));
 
     const content = [
-      '# Domain Availability Report',
+      '# Domain Scout AI Report',
       `# Generated: ${new Date().toISOString()}`,
+      lastAiMeta ? `# AI Prompt: "${lastAiMeta.prompt}" (Evaluated in ${lastAiMeta.rounds} rounds)` : '',
       `# Total Checked: ${currentResults.length} | Available: ${available.length} | Starred: ${starred.length}`,
       '',
       '## STARRED / SHORTLISTED DOMAINS:',
@@ -980,18 +1218,18 @@ document.addEventListener('DOMContentLoaded', () => {
       '',
       '## ALL RESULTS:',
       ...(currentResults.map(r => `${r.domain}\t${r.isAvailable ? 'AVAILABLE' : (r.isAftermarket ? 'FOR_SALE' : 'REGISTERED')}`))
-    ].join('\n');
+    ].filter(Boolean).join('\n');
 
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `domain-check-${new Date().toISOString().slice(0, 10)}.txt`;
+    a.download = `domain-scout-${new Date().toISOString().slice(0, 10)}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast('Exported results to file');
+    showToast('Exported report to file');
   });
 
   // Clipboard Helpers
@@ -1020,15 +1258,6 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('Fallback copy failed', err);
     }
     document.body.removeChild(textArea);
-  }
-
-  function escapeHtml(str) {
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
   }
 
   // Initial load

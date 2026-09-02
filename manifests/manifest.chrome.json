@@ -1,12 +1,12 @@
 {
   "manifest_version": 3,
-  "name": "Domain Scout - Fast Domain Search",
-  "version": "1.0.1",
+  "name": "Domain Scout AI - Fast Domain Search",
+  "version": "1.1.0",
   "description": "Instant bulk domain availability checker for .com, .io, .ai and more via InstantDomainSearch.",
   "author": "Zulu",
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Domain Scout - Fast Domain Search",
+    "default_title": "Domain Scout AI - Fast Domain Search",
     "default_icon": {
       "16": "icons/icon-16.png",
       "32": "icons/icon-32.png",
@@ -15,10 +15,16 @@
     }
   },
   "permissions": [
-    "storage"
+    "storage",
+    "cookies"
   ],
   "host_permissions": [
-    "https://cloud.instantdomainsearch.com/*"
+    "https://cloud.instantdomainsearch.com/*",
+    "https://chatgpt.com/*",
+    "https://*.openai.com/*",
+    "https://generativelanguage.googleapis.com/*",
+    "https://api.groq.com/*",
+    "https://openrouter.ai/*"
   ],
   "icons": {
     "16": "icons/icon-16.png",

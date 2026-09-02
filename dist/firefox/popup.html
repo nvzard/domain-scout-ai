@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Domain Scout - Fast Domain Search</title>
+  <title>Domain Scout AI - Fast Domain Search</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 
@@ -26,25 +26,101 @@
           </svg>
         </div>
         <div class="brand-text">
-          <h1>Domain Scout - Fast Domain Search</h1>
-          <!-- <span class="subtitle">Bulk Availability via InstantDomainSearch</span> -->
+          <h1>Domain Scout AI</h1>
+          <span class="subtitle">AI Ideator & Bulk Availability Checker</span>
         </div>
-      </div>
-      <div class="header-actions">
-        <button id="btnSample" class="btn-ghost" title="Load sample names">Sample</button>
-        <button id="btnVariations" class="btn-ghost" title="Generate brand prefixes & suffixes">⚡ Variations</button>
-        <button id="btnClearInput" class="btn-ghost" title="Clear input">Clear</button>
       </div>
     </header>
 
+    <!-- Mode Switcher Tabs -->
+    <nav class="mode-switcher-nav" aria-label="Mode Switcher">
+      <div class="mode-tabs">
+        <button class="mode-tab active" id="tabModeAi" data-mode="ai">
+          <span class="mode-tab-icon">✨</span>
+          <span>AI Scout Mode</span>
+        </button>
+        <button class="mode-tab" id="tabModeManual" data-mode="manual">
+          <span class="mode-tab-icon">📋</span>
+          <span>Manual Mode</span>
+        </button>
+      </div>
+    </nav>
+
     <!-- Main Content -->
     <main class="app-main">
-      <!-- Input Section -->
-      <section class="section input-section">
+      <!-- AI Scout Section -->
+      <section class="section ai-section" id="sectionAi">
         <div class="section-header">
           <div class="section-title-group">
-            <label for="domainInput" class="section-title">Input Names / Domains</label>
-            <span class="section-subtitle">Supports ChatGPT lists, markdown tables, notes, & TLDs</span>
+            <label for="aiPromptInput" class="section-title">Describe Your Idea</label>
+            <span class="section-subtitle">AI generates names & auto-hunts available domains</span>
+          </div>
+          <div class="ai-header-actions">
+            <button id="btnClearAiPrompt" class="btn-ghost-sm" title="Clear AI prompt">Clear</button>
+          </div>
+        </div>
+
+        <div class="textarea-wrapper ai-textarea-wrapper">
+          <textarea id="aiPromptInput"
+            placeholder="e.g. Suggest domain ideas for a Product Hunt alternative for indie makers...&#10;or: AI photo editor for designers, developer portfolio platform..."
+            rows="3" spellcheck="false"></textarea>
+        </div>
+
+        <!-- Inspiration Chips -->
+        <div class="inspiration-chips-row">
+          <span class="inspiration-label">Inspirations:</span>
+          <div class="inspiration-chips" id="inspirationChips">
+            <button class="chip-pill" data-prompt="Product Hunt alternative for indie hackers and makers">🚀 Product Hunt Alt</button>
+            <button class="chip-pill" data-prompt="Modern AI agent and automated productivity tool">🤖 AI Assistant</button>
+            <button class="chip-pill" data-prompt="Developer cloud infrastructure and deployment tool">⚡ Dev Tool</button>
+            <button class="chip-pill" data-prompt="Creative design assets and Figma plugin studio">🎨 Design Studio</button>
+            <button class="chip-pill" data-prompt="Personal finance and crypto investment portfolio tracker">💰 FinTech</button>
+          </div>
+        </div>
+
+        <!-- AI Controls Bar -->
+        <div class="ai-controls-bar">
+          <div class="ai-control-group">
+            <label for="aiProviderSelect" class="control-label">AI Engine:</label>
+            <select id="aiProviderSelect" class="select-input">
+              <option value="auto">Auto (Recommended)</option>
+              <option value="chatgpt_web">ChatGPT Session</option>
+              <option value="chrome_ai" id="optChromeAi">Chrome Browser AI</option>
+              <option value="smart_brain">Smart Brain (Offline / Instant)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- AI Action Button -->
+        <div class="action-row">
+          <button id="btnAiGenerate" class="btn-primary btn-ai-gradient">
+            <span class="btn-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+                <path d="M5 3v4"/>
+                <path d="M19 17v4"/>
+                <path d="M3 5h4"/>
+                <path d="M17 19h4"/>
+              </svg>
+            </span>
+            <span id="btnAiGenerateText">Generate & Find Available Domains</span>
+            <span class="keyboard-hint" id="aiKeyboardHint">⌘+Enter</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Manual Input Section -->
+      <section class="section input-section hidden" id="sectionManual">
+        <div class="section-header">
+          <div class="section-title-group">
+            <label for="domainInput" class="section-title">Paste Names / Domains</label>
+            <span class="section-subtitle">Paste ChatGPT suggestions, markdown tables, or lists</span>
+          </div>
+          <div class="manual-header-actions">
+            <button id="btnSample" class="btn-ghost-sm" title="Load sample names">Sample</button>
+            <button id="btnVariations" class="btn-ghost-sm" title="Generate brand prefixes & suffixes">⚡ Variations</button>
+            <button id="btnClearInput" class="btn-ghost-sm" title="Clear input">Clear</button>
           </div>
         </div>
         <div class="textarea-wrapper">
@@ -52,14 +128,29 @@
             placeholder="Paste ChatGPT ideas, markdown tables, or domain lists:&#10;1. **LaunchScout** (.com, .io) — Tool discovery&#10;2. **Noviqo** — Modern AI assistant&#10;3. Brevio (Clean & short)&#10;name1, name2, name3.com"
             rows="5" spellcheck="false"></textarea>
         </div>
+
+        <!-- Manual Primary Action -->
+        <div class="action-row">
+          <button id="btnCheck" class="btn-primary">
+            <span class="btn-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </span>
+            <span id="btnCheckText">Check Availability</span>
+            <span class="keyboard-hint" id="keyboardHint">⌘+Enter</span>
+          </button>
+        </div>
       </section>
 
-      <!-- Preferences Section -->
+      <!-- Shared TLD Preferences Section -->
       <section class="section preferences-section">
         <div class="section-header">
           <div class="section-title-group">
             <span class="section-title">TLD Preferences</span>
-            <span class="section-subtitle">Checked for base names</span>
+            <span class="section-subtitle">Checked extensions</span>
           </div>
           <button id="btnResetTlds" class="btn-link" title="Reset to .com, .io, .ai">Default (Top 3)</button>
         </div>
@@ -90,22 +181,24 @@
         </div>
       </section>
 
-      <!-- Primary Action -->
-      <div class="action-row">
-        <button id="btnCheck" class="btn-primary">
-          <span class="btn-icon">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-              stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-          </span>
-          <span id="btnCheckText">Check Availability</span>
-          <span class="keyboard-hint" id="keyboardHint">⌘+Enter</span>
-        </button>
+      <!-- AI Iteration Stepper Card (Shown during AI Hunt) -->
+      <div id="aiProgressCard" class="ai-progress-card hidden">
+        <div class="ai-stepper-header">
+          <div class="ai-stepper-left">
+            <div class="ai-spinner"></div>
+            <span class="ai-round-badge" id="aiRoundBadge">Round 1/3</span>
+          </div>
+          <div class="ai-stats-chip" id="aiLiveMetrics">
+            <span id="aiFoundCount">0</span> available found
+          </div>
+        </div>
+        <p class="ai-progress-msg" id="aiProgressMsg">🤖 Brainstorming domain ideas with AI...</p>
+        <div class="progress-bar-track ai-track">
+          <div id="aiProgressBarFill" class="progress-bar-fill ai-bar-fill" style="width: 15%;"></div>
+        </div>
       </div>
 
-      <!-- Progress Bar (hidden by default) -->
+      <!-- Manual Progress Bar (hidden by default) -->
       <div id="progressContainer" class="progress-container hidden">
         <div class="progress-info">
           <span id="progressText">Checking domains...</span>
@@ -118,6 +211,15 @@
 
       <!-- Status / Summary Dashboard (hidden until checked) -->
       <div id="resultsDashboard" class="results-dashboard hidden">
+        <!-- AI Discovery Banner -->
+        <div id="aiSummaryBanner" class="ai-summary-banner hidden">
+          <div class="ai-banner-icon">✨</div>
+          <div class="ai-banner-content">
+            <span class="ai-banner-title" id="aiBannerTitle">AI Hunt Complete</span>
+            <span class="ai-banner-sub" id="aiBannerSub">Found available domains matching your prompt.</span>
+          </div>
+        </div>
+
         <div class="stats-grid">
           <div class="stat-card stat-available" id="statCardAvailable" role="button" tabindex="0">
             <span class="stat-value" id="countAvailable">0</span>
@@ -248,6 +350,7 @@
 
   <!-- Scripts -->
   <script src="domain-checker.js"></script>
+  <script src="ai-generator.js"></script>
   <script src="popup.js"></script>
 </body>
 

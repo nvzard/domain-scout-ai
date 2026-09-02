@@ -78,20 +78,33 @@ domain-checker-extension/
 
 ## ✨ Features Supported in Both Browsers
 
+### 🤖 AI Scout Mode (NEW)
+- **Concept-to-Domain Ideator**: Simply describe your product, startup, or project idea (e.g. *"Suggest domain ideas for a Product Hunt alternative for indie hackers"*).
+- **Autonomous Multi-Round Reiteration Loop**: If generated domains are registered/taken, the AI automatically re-prompts with taken exclusions, hunting across rounds until available domains matching your concept are found!
+- **Multi-Provider Client-Side AI (Zero Backend Needed)**:
+  - **Auto (Recommended)**: Intelligently selects best available local AI or session engine.
+  - **ChatGPT Web Session**: Uses active browser session credentials on `chatgpt.com`.
+  - **Chrome Browser AI (`window.ai` / Gemini Nano)**: Leverages built-in on-device AI in supported Chrome environments.
+  - **Smart Brain (Offline / Instant)**: 100% client-side, zero-config, instant startup brand naming engine using linguistic roots and industry vocabulary graphs.
+- **Inspiration Quick Chips**: 1-click starter prompts for SaaS, AI Assistants, Dev Tools, Design Studios, and FinTech.
+- **Target Available Domains**: Hunts until 10 available domains are found across iterative rounds.
+
+### 📋 Manual Bulk Checker Mode
 - **Multi-Format Input**:
   - Format 1: Newlines (`name1\nname2\nname3`)
   - Format 2: Commas (`name1, name2, name3.com`)
-  - Format 3: Brainstorm notes (`LaunchList — products get listed for discovery`)
+  - Format 3: ChatGPT lists (`1. **LaunchScout** (.com, .io) — Tool discovery`)
+  - Format 4: Markdown tables and JSON arrays
 - **TLD Preferences**: Default top 3 (`.com`, `.io`, `.ai`) + customizable chips (`.co`, `.dev`, `.app`, `.org`, `.xyz`, etc.).
 - **⚡ Smart Variations Generator**: 1-click generation of startup-friendly prefixes (`get`, `try`, `use`, `go`, `join`, `my`, `hey`) and suffixes (`app`, `hq`, `base`, `hub`, `flow`, `ly`, `ify`, `lab`, `stack`, `pro`).
+
+### 📊 Dashboard & Productivity
 - **Instant Filtering & Dashboard**: Filter tabs for Available, All, For Sale, and Starred domains.
 - **🌟 Starred / Shortlist Favorites**: Bookmark favorite domains with local persistence and export options.
 - **🛒 Direct Registrar Integration**: "Continue" button with dropdown to register domains on GoDaddy, Hostinger, Spaceship, Domain.com, and Namecheap.
 - **🏷️ Aftermarket "Buy / Offer"**: Direct links to secondary marketplaces (Afternic, Sedo, Dan.com, GoDaddy) for for-sale domains.
 - **🔍 Domain Inspection Tools**: 1-click WHOIS lookup and Wayback Machine archive history for registered domains.
-- **Productivity**:
-  - One-click **"Copy Available"** / **"Copy Starred"** buttons.
-  - Individual domain copy buttons.
-  - Export to `.txt` report.
-  - Shortcut: `Cmd+Enter` (Mac) / `Ctrl+Enter` (Windows/Linux).
-  - Storage persistence across popup open/close sessions.
+- **One-click "Copy Available" / "Copy Starred"** buttons and individual copy buttons.
+- **Export to `.txt` report** with timestamp, prompt metadata, and domain status.
+- **Global Keyboard Shortcut**: `Cmd+Enter` (Mac) / `Ctrl+Enter` (Windows/Linux).
+- **100% Client-Side**: All checks, sessions, and storage run locally in your browser.
