@@ -818,8 +818,16 @@ Please suggest ${count} BRAND NEW, DIFFERENT domain name ideas for "${prompt}".
       targetAvailableCount = 10,
       maxRounds = 3,
       onProgress = () => {},
+      isCancelled = () => false,
+      signal = null,
       domainCheckerInstance = (typeof global !== 'undefined' && global.DomainChecker ? global.DomainChecker : null)
     } = params;
+
+    const checkCancelled = () => {
+      if (typeof isCancelled === 'function' && isCancelled()) return true;
+      if (signal && signal.aborted) return true;
+      return false;
+    };
 
     if (!domainCheckerInstance) {
       throw new Error('DomainChecker module is required for availability verification.');
@@ -834,6 +842,10 @@ Please suggest ${count} BRAND NEW, DIFFERENT domain name ideas for "${prompt}".
     let fallbackWarning = null;
 
     while (round <= maxRounds) {
+      if (checkCancelled()) {
+        break;
+      }
+
       const currentAvailableCount = Array.from(accumulatedResultsMap.values()).filter(r => r.isAvailable).length;
 
       // Check if target already achieved
@@ -917,12 +929,20 @@ Please suggest ${count} BRAND NEW, DIFFERENT domain name ideas for "${prompt}".
         currentBatchCount: freshPayload.length
       });
 
+      if (checkCancelled()) {
+        break;
+      }
+
       // 3. Check availability in bulk via InstantDomainSearch
       const freshNamesText = freshPayload.map(p => p.name).join('\n');
       const batchResults = await domainCheckerInstance.checkDomains(freshNamesText, defaultTlds, {
         batchSize: 50,
         delayMs: 100
       });
+
+      if (checkCancelled()) {
+        break;
+      }
 
       // 4. Ingest results and collect taken names
       for (const res of batchResults) {

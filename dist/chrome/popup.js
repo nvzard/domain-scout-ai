@@ -427,7 +427,8 @@ document.addEventListener('DOMContentLoaded', () => {
         'lastResults',
         'currentFilter',
         'starredDomains',
-        'lastAiMeta'
+        'lastAiMeta',
+        'searchState'
       ]);
 
       if (data.currentMode) {
@@ -467,6 +468,33 @@ document.addEventListener('DOMContentLoaded', () => {
         currentResults = data.lastResults;
         currentFilter = data.currentFilter || 'available';
         renderResults();
+      }
+
+      // Check if a background search is currently running
+      if (data.searchState && data.searchState.status === 'running') {
+        isChecking = true;
+        if (data.searchState.type === 'ai') {
+          btnAiGenerate.disabled = true;
+          btnAiGenerateText.textContent = 'Hunting Available Domains...';
+          aiProgressCard.classList.remove('hidden');
+          const p = data.searchState.progress || {};
+          if (p.round && p.maxRounds) aiRoundBadge.textContent = `Round ${p.round}/${p.maxRounds}`;
+          if (p.message) aiProgressMsg.textContent = p.message;
+          if (p.availableCount !== undefined) aiFoundCount.textContent = String(p.availableCount);
+          let pct = 20;
+          if (p.step === 'brainstorming') pct = (p.round - 1) * 33 + 15;
+          if (p.step === 'checking') pct = (p.round - 1) * 33 + 25;
+          if (p.step === 'analyzing') pct = p.round * 33;
+          aiProgressBarFill.style.width = `${Math.min(pct, 100)}%`;
+        } else if (data.searchState.type === 'manual') {
+          btnCheck.disabled = true;
+          btnCheckText.textContent = 'Checking...';
+          progressContainer.classList.remove('hidden');
+          const p = data.searchState.progress || {};
+          progressBarFill.style.width = `${p.percentage || 0}%`;
+          progressPercent.textContent = `${p.percentage || 0}%`;
+          progressText.textContent = `Checked ${p.processed || 0} of ${p.total || 0} names...`;
+        }
       }
     } catch (e) {
       console.warn('Could not load storage state', e);
@@ -705,11 +733,28 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // AI Prompt Clear
+  // AI Prompt & Results Clear
   btnClearAiPrompt.addEventListener('click', () => {
     aiPromptInput.value = '';
+    currentResults = [];
+    lastAiMeta = null;
+    isChecking = false;
+    btnAiGenerate.disabled = false;
+    btnAiGenerateText.textContent = 'Generate & Find Available Domains';
+    aiProgressCard.classList.add('hidden');
+    resultsDashboard.classList.add('hidden');
+    aiSummaryBanner.classList.add('hidden');
+
+    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+      try {
+        chrome.runtime.sendMessage({ type: 'CANCEL_SEARCH' }, () => {
+          if (chrome.runtime && chrome.runtime.lastError) { /* ignore */ }
+        });
+      } catch (_) {}
+    }
+
     persistState();
-    showToast('AI prompt cleared');
+    showToast('AI prompt & results cleared');
   });
 
   aiPromptInput.addEventListener('input', () => {
@@ -838,7 +883,22 @@ document.addEventListener('DOMContentLoaded', () => {
   btnClearInput.addEventListener('click', () => {
     domainInput.value = '';
     currentResults = [];
+    lastAiMeta = null;
+    isChecking = false;
+    btnCheck.disabled = false;
+    btnCheckText.textContent = 'Check Availability';
+    progressContainer.classList.add('hidden');
     resultsDashboard.classList.add('hidden');
+    aiSummaryBanner.classList.add('hidden');
+
+    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+      try {
+        chrome.runtime.sendMessage({ type: 'CANCEL_SEARCH' }, () => {
+          if (chrome.runtime && chrome.runtime.lastError) { /* ignore */ }
+        });
+      } catch (_) {}
+    }
+
     persistState();
     showToast('Cleared');
   });
@@ -879,7 +939,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   initKeyboardShortcutHint();
 
-  // Core AI Mode Execution: Autonomous Reiteration Loop
+  // Core AI Mode Execution: Autonomous Reiteration Loop via Background Service Worker
   async function startAiHunt() {
     const prompt = aiPromptInput.value.trim();
     if (!prompt) {
@@ -893,6 +953,21 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    // Validate API key is provided when a cloud provider is chosen
+    const needsKey = ['openai', 'gemini', 'groq', 'openrouter'].includes(aiProvider);
+    const currentApiKey = aiApiKeys[aiProvider] || '';
+    if (needsKey && !currentApiKey.trim()) {
+      showToast(`⚠️ Please enter your ${aiProvider.toUpperCase()} API key above.`);
+      if (aiApiKeyInput) aiApiKeyInput.focus();
+      return;
+    }
+
+    // IMMEDIATELY clear previous results before starting fresh hunt
+    currentResults = [];
+    lastAiMeta = null;
+    resultsDashboard.classList.add('hidden');
+    aiSummaryBanner.classList.add('hidden');
+
     isChecking = true;
     btnAiGenerate.disabled = true;
     btnAiGenerateText.textContent = 'Hunting Available Domains...';
@@ -904,19 +979,41 @@ document.addEventListener('DOMContentLoaded', () => {
     aiProgressMsg.textContent = '🤖 Brainstorming domain ideas with AI...';
     aiProgressBarFill.style.width = '15%';
 
-    // Validate API key is provided when a cloud provider is chosen
-    const needsKey = ['openai', 'gemini', 'groq', 'openrouter'].includes(aiProvider);
-    const currentApiKey = aiApiKeys[aiProvider] || '';
-    if (needsKey && !currentApiKey.trim()) {
-      showToast(`⚠️ Please enter your ${aiProvider.toUpperCase()} API key above.`);
-      if (aiApiKeyInput) aiApiKeyInput.focus();
-      isChecking = false;
-      btnAiGenerate.disabled = false;
-      btnAiGenerateText.textContent = 'Generate & Find Available Domains';
-      aiProgressCard.classList.add('hidden');
-      return;
-    }
+    persistState();
 
+    const searchId = `ai_${Date.now()}`;
+
+    // Delegate to background service worker so search persists even if popup is closed
+    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+      try {
+        chrome.runtime.sendMessage({
+          type: 'START_AI_HUNT',
+          searchId,
+          payload: {
+            prompt,
+            defaultTlds: preferredTlds,
+            provider: aiProvider,
+            apiKey: aiApiKeys[aiProvider] || '',
+            modelOverride: aiProvider === 'openrouter' ? (aiModelOverride || '') : '',
+            targetAvailableCount: aiTargetCount,
+            maxRounds: 3
+          }
+        }, (res) => {
+          if (chrome.runtime && chrome.runtime.lastError) {
+            console.warn('Background dispatch failed, using in-process hunt:', chrome.runtime.lastError);
+            startAiHuntInProcess(prompt);
+          }
+        });
+      } catch (e) {
+        startAiHuntInProcess(prompt);
+      }
+    } else {
+      startAiHuntInProcess(prompt);
+    }
+  }
+
+  // In-process fallback for AI Hunt (if background service worker is not active)
+  async function startAiHuntInProcess(prompt) {
     try {
       const huntResult = await AiGenerator.huntAvailableDomains({
         prompt,
@@ -977,7 +1074,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   btnAiGenerate.addEventListener('click', startAiHunt);
 
-  // Manual Mode Check Execution
+  // Manual Mode Check Execution via Background
   async function startManualCheck() {
     const text = domainInput.value.trim();
     if (!text) {
@@ -991,6 +1088,12 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    // IMMEDIATELY clear previous results before starting fresh check
+    currentResults = [];
+    lastAiMeta = null;
+    resultsDashboard.classList.add('hidden');
+    aiSummaryBanner.classList.add('hidden');
+
     isChecking = true;
     btnCheck.disabled = true;
     btnCheckText.textContent = 'Checking...';
@@ -999,8 +1102,36 @@ document.addEventListener('DOMContentLoaded', () => {
     progressPercent.textContent = '0%';
     progressText.textContent = 'Preparing bulk request...';
 
-    lastAiMeta = null;
+    persistState();
 
+    const searchId = `manual_${Date.now()}`;
+
+    // Delegate to background service worker
+    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+      try {
+        chrome.runtime.sendMessage({
+          type: 'START_MANUAL_CHECK',
+          searchId,
+          payload: {
+            text,
+            preferredTlds
+          }
+        }, (res) => {
+          if (chrome.runtime && chrome.runtime.lastError) {
+            console.warn('Background dispatch failed, using in-process check:', chrome.runtime.lastError);
+            startManualCheckInProcess(text);
+          }
+        });
+      } catch (e) {
+        startManualCheckInProcess(text);
+      }
+    } else {
+      startManualCheckInProcess(text);
+    }
+  }
+
+  // In-process fallback for manual domain check
+  async function startManualCheckInProcess(text) {
     try {
       const results = await DomainChecker.checkDomains(text, preferredTlds, {
         batchSize: 50,
@@ -1043,6 +1174,88 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   btnCheck.addEventListener('click', startManualCheck);
+
+  // Listen for real-time background search events
+  if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
+    chrome.runtime.onMessage.addListener((message) => {
+      if (!message || !message.type) return;
+
+      if (message.type === 'SEARCH_PROGRESS') {
+        const p = message.progress;
+        if (p && currentMode === 'ai') {
+          if (p.round && p.maxRounds) aiRoundBadge.textContent = `Round ${p.round}/${p.maxRounds}`;
+          if (p.message) aiProgressMsg.textContent = p.message;
+          if (p.availableCount !== undefined) aiFoundCount.textContent = String(p.availableCount);
+
+          let pct = 20;
+          if (p.step === 'brainstorming') pct = (p.round - 1) * 33 + 15;
+          if (p.step === 'checking') pct = (p.round - 1) * 33 + 25;
+          if (p.step === 'analyzing') pct = p.round * 33;
+          aiProgressBarFill.style.width = `${Math.min(pct, 100)}%`;
+        } else if (p && currentMode === 'manual') {
+          progressBarFill.style.width = `${p.percentage || 0}%`;
+          progressPercent.textContent = `${p.percentage || 0}%`;
+          progressText.textContent = `Checked ${p.processed || 0} of ${p.total || 0} names...`;
+        }
+      } else if (message.type === 'SEARCH_COMPLETED') {
+        isChecking = false;
+        btnAiGenerate.disabled = false;
+        btnAiGenerateText.textContent = 'Generate & Find Available Domains';
+        btnCheck.disabled = false;
+        btnCheckText.textContent = 'Check Availability';
+
+        aiProgressBarFill.style.width = '100%';
+        setTimeout(() => {
+          aiProgressCard.classList.add('hidden');
+          progressContainer.classList.add('hidden');
+        }, 500);
+
+        if (message.result) {
+          currentResults = message.result.allResults || [];
+          lastAiMeta = message.lastAiMeta || null;
+          currentFilter = 'available';
+          renderResults();
+
+          if (message.result.fallbackWarning) {
+            showToast(`⚠️ ${message.result.fallbackWarning}`, 4000);
+          } else if (message.result.availableCount > 0) {
+            showToast(`🎉 Found ${message.result.availableCount} available domain${message.result.availableCount > 1 ? 's' : ''} in ${message.result.rounds} round${message.result.rounds > 1 ? 's' : ''}!`);
+          } else {
+            showToast(`Check complete across ${message.result.rounds} rounds. No available domains found.`);
+          }
+        } else if (message.results) {
+          currentResults = message.results || [];
+          lastAiMeta = null;
+          const availableList = currentResults.filter(r => r.isAvailable);
+          currentFilter = availableList.length > 0 ? 'available' : 'all';
+          renderResults();
+
+          if (availableList.length > 0) {
+            showToast(`🎉 Found ${availableList.length} available domain${availableList.length > 1 ? 's' : ''}!`);
+          } else {
+            showToast('Check complete. No available domains found.');
+          }
+        }
+      } else if (message.type === 'SEARCH_ERROR') {
+        isChecking = false;
+        btnAiGenerate.disabled = false;
+        btnAiGenerateText.textContent = 'Generate & Find Available Domains';
+        btnCheck.disabled = false;
+        btnCheckText.textContent = 'Check Availability';
+        aiProgressCard.classList.add('hidden');
+        progressContainer.classList.add('hidden');
+        showToast(`Error: ${message.error || 'Search failed'}`);
+      } else if (message.type === 'SEARCH_CANCELLED') {
+        isChecking = false;
+        btnAiGenerate.disabled = false;
+        btnAiGenerateText.textContent = 'Generate & Find Available Domains';
+        btnCheck.disabled = false;
+        btnCheckText.textContent = 'Check Availability';
+        aiProgressCard.classList.add('hidden');
+        progressContainer.classList.add('hidden');
+      }
+    });
+  }
 
   // Results Rendering & Filtering
   function renderResults() {

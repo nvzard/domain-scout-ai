@@ -25,6 +25,13 @@
       "128": "icons/icon-128.png"
     }
   },
+  "background": {
+    "scripts": [
+      "domain-checker.js",
+      "ai-generator.js",
+      "background.js"
+    ]
+  },
   "permissions": [
     "storage",
     "clipboardWrite"

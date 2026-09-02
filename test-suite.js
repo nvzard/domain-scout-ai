@@ -607,11 +607,113 @@ For example: Findio, Seekio, Hunt`;
 }
 testReasoningImmunity();
 
-Promise.all([testReiterationLoop(), testOpenRouterParsing()]).then(() => {
-  console.log('\n🎉 ALL 14 TEST SUITES PASSED SUCCESSFULLY!');
+// Test 15: Cancellation Handling in huntAvailableDomains
+async function testCancellation() {
+  console.log('\nTest 15: Cancellation Handling in huntAvailableDomains');
+  
+  let cancelled = false;
+  const mockChecker = {
+    parseDomainPayload: (txt, tlds) => [{ name: 'testcandidate', tlds: ['com'] }],
+    checkDomains: async () => {
+      cancelled = true; // flag cancelled after first check
+      return [{ name: 'testcandidate', tld: 'com', domain: 'testcandidate.com', isAvailable: false, isRegistered: true }];
+    }
+  };
+
+  const result = await AiGenerator.huntAvailableDomains({
+    prompt: 'Product Hunt alternative for indie hackers',
+    defaultTlds: ['com'],
+    provider: 'smart_brain',
+    targetAvailableCount: 10,
+    maxRounds: 3,
+    domainCheckerInstance: mockChecker,
+    isCancelled: () => cancelled
+  });
+
+  assert.ok(result.rounds <= 2, `Expected rounds <= 2 due to cancellation, got ${result.rounds}`);
+  console.log('✓ Passed Cancellation Handling tests');
+}
+
+// Test 16: Background Worker State Management & Result Clearing
+async function testBackgroundWorkerAndResultClearing() {
+  console.log('\nTest 16: Background Worker & Search Clearing Logic');
+
+  const mockStorage = {};
+  const mockSentMessages = [];
+
+  global.chrome = {
+    storage: {
+      local: {
+        get: (keys, cb) => {
+          const out = {};
+          if (Array.isArray(keys)) {
+            keys.forEach(k => { if (k in mockStorage) out[k] = mockStorage[k]; });
+          }
+          cb(out);
+        },
+        set: (obj, cb) => {
+          Object.assign(mockStorage, obj);
+          if (cb) cb();
+        }
+      }
+    },
+    runtime: {
+      sendMessage: (msg) => {
+        mockSentMessages.push(msg);
+        return Promise.resolve();
+      },
+      onMessage: {
+        addListener: () => {}
+      }
+    }
+  };
+
+  // Mock global.DomainChecker and global.AiGenerator for background.js
+  global.DomainChecker = DomainChecker;
+  global.AiGenerator = AiGenerator;
+
+  const BackgroundWorker = require('./src/background.js');
+
+  // 1. Start background hunt with mock checker
+  let checkCallCount = 0;
+  global.DomainChecker.checkDomains = async (text, tlds) => {
+    checkCallCount++;
+    return [{ name: 'domainhunt', tld: 'com', domain: 'domainhunt.com', isAvailable: true, isRegistered: false }];
+  };
+
+  await BackgroundWorker.startAiHuntBackground({
+    prompt: 'Indie maker tools',
+    defaultTlds: ['com'],
+    provider: 'smart_brain',
+    targetAvailableCount: 1,
+    maxRounds: 1
+  }, 'test_search_1');
+
+  assert.strictEqual(mockStorage.searchState.status, 'completed');
+  assert.strictEqual(mockStorage.lastResults.length, 1);
+  assert.strictEqual(mockStorage.lastResults[0].domain, 'domainhunt.com');
+  assert.strictEqual(mockStorage.lastResults[0].isAvailable, true);
+  assert.ok(mockStorage.lastAiMeta);
+  assert.strictEqual(mockStorage.lastAiMeta.availableCount, 1);
+
+  // 2. Test Cancellation
+  await BackgroundWorker.cancelActiveSearch();
+  assert.strictEqual(mockStorage.searchState.status, 'idle');
+
+  console.log('✓ Passed Background Worker & Result Clearing tests');
+}
+
+Promise.all([
+  testReiterationLoop(),
+  testOpenRouterParsing(),
+  testCancellation(),
+  testBackgroundWorkerAndResultClearing()
+]).then(() => {
+  console.log('\n🎉 ALL 16 TEST SUITES PASSED SUCCESSFULLY!');
 }).catch(err => {
   console.error('\n❌ Test failed:', err);
   process.exit(1);
 });
+
 
 
