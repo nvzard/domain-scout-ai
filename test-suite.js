@@ -202,12 +202,22 @@ async function testReiterationLoop() {
   assert.ok(result.rounds >= 2, 'Should have iterated to round 2');
   assert.ok(result.availableCount >= 3, 'Should have found at least 3 available domains');
   assert.strictEqual(result.availableDomains.length, 3);
+  assert.strictEqual(result.engine, 'smart_brain');
+  assert.strictEqual(result.engineName, 'Smart Brain (Offline)');
   assert.ok(progressEvents.length > 0, 'Should have emitted progress events');
-  console.log(`✓ Reiteration loop completed in ${result.rounds} rounds with ${result.availableCount} available domains found`);
+  console.log(`✓ Reiteration loop completed in ${result.rounds} rounds with ${result.availableCount} available domains found (Engine: ${result.engineName})`);
 }
 
-// Test 11: Chrome AI Firefox vs Chrome Environment Validation & Default 10 Target Count
-console.log('\nTest 11: Chrome AI Environment Validation');
+// Test 11: AI Engine Display Names
+console.log('\nTest 11: AI Engine Display Names');
+assert.strictEqual(AiGenerator.getEngineDisplayName('smart_brain'), 'Smart Brain (Offline)');
+assert.strictEqual(AiGenerator.getEngineDisplayName('chatgpt_web'), 'ChatGPT Session');
+assert.strictEqual(AiGenerator.getEngineDisplayName('chrome_ai'), 'Chrome Browser AI');
+assert.strictEqual(AiGenerator.getEngineDisplayName('openai'), 'OpenAI (GPT-4o)');
+console.log('✓ Passed AI Engine Display Names tests');
+
+// Test 12: Chrome AI Firefox vs Chrome Environment Validation & Default 10 Target Count
+console.log('\nTest 12: Chrome AI Environment Validation');
 async function testChromeAiValidation() {
   const originalUserAgent = typeof navigator !== 'undefined' ? navigator.userAgent : undefined;
   
@@ -238,7 +248,7 @@ async function testChromeAiValidation() {
 }
 
 Promise.all([testReiterationLoop(), testChromeAiValidation()]).then(() => {
-  console.log('\n🎉 ALL 11 TEST SUITES PASSED SUCCESSFULLY!');
+  console.log('\n🎉 ALL 12 TEST SUITES PASSED SUCCESSFULLY!');
 }).catch(err => {
   console.error('\n❌ Test failed:', err);
   process.exit(1);

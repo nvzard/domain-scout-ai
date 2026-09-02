@@ -781,7 +781,9 @@ document.addEventListener('DOMContentLoaded', () => {
         prompt,
         rounds: huntResult.rounds,
         totalChecked: huntResult.totalChecked,
-        availableCount: huntResult.availableCount
+        availableCount: huntResult.availableCount,
+        engine: huntResult.engine,
+        engineName: huntResult.engineName || (typeof AiGenerator !== 'undefined' && AiGenerator.getEngineDisplayName ? AiGenerator.getEngineDisplayName(huntResult.engine || aiProvider) : (huntResult.engine || aiProvider))
       };
 
       currentFilter = 'available';
@@ -888,7 +890,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (lastAiMeta && lastAiMeta.prompt) {
       aiSummaryBanner.classList.remove('hidden');
       aiBannerTitle.textContent = `✨ AI Hunt Results: ${lastAiMeta.availableCount} Available Domains`;
-      aiBannerSub.textContent = `Scanned ${lastAiMeta.totalChecked} candidate domains across ${lastAiMeta.rounds} iteration round${lastAiMeta.rounds > 1 ? 's' : ''} for "${lastAiMeta.prompt.slice(0, 45)}${lastAiMeta.prompt.length > 45 ? '...' : ''}"`;
+      const engineLabel = lastAiMeta.engineName || (typeof AiGenerator !== 'undefined' && AiGenerator.getEngineDisplayName ? AiGenerator.getEngineDisplayName(lastAiMeta.engine) : (lastAiMeta.engine || 'AI'));
+      aiBannerSub.textContent = `Scanned ${lastAiMeta.totalChecked} candidate domains across ${lastAiMeta.rounds} iteration round${lastAiMeta.rounds > 1 ? 's' : ''} using ${engineLabel} for "${lastAiMeta.prompt.slice(0, 45)}${lastAiMeta.prompt.length > 45 ? '...' : ''}"`;
     } else {
       aiSummaryBanner.classList.add('hidden');
     }
@@ -1207,7 +1210,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const content = [
       '# Domain Scout AI Report',
       `# Generated: ${new Date().toISOString()}`,
-      lastAiMeta ? `# AI Prompt: "${lastAiMeta.prompt}" (Evaluated in ${lastAiMeta.rounds} rounds)` : '',
+      lastAiMeta ? `# AI Prompt: "${lastAiMeta.prompt}" (Engine: ${lastAiMeta.engineName || lastAiMeta.engine || 'AI'}, Evaluated in ${lastAiMeta.rounds} rounds)` : '',
       `# Total Checked: ${currentResults.length} | Available: ${available.length} | Starred: ${starred.length}`,
       '',
       '## STARRED / SHORTLISTED DOMAINS:',

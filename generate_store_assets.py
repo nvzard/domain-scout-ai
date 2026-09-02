@@ -185,7 +185,9 @@ SCREENSHOTS = [
                 "prompt": "AI agent for automated productivity, meeting notes & smart workflows",
                 "rounds": 2,
                 "totalChecked": 28,
-                "availableCount": 10
+                "availableCount": 10,
+                "engine": "smart_brain",
+                "engineName": "Smart Brain (Offline)"
             },
             "lastResults": SAMPLE_RESULTS,
             "starredDomains": ["agentflow.ai", "synapsetask.io", "autocortex.com"],

@@ -411,16 +411,37 @@ Please suggest ${count} BRAND NEW, DIFFERENT domain name ideas for "${prompt}".
     return data.choices?.[0]?.message?.content || '';
   }
 
+  const ENGINE_DISPLAY_NAMES = {
+    'smart_brain': 'Smart Brain (Offline)',
+    'chatgpt_web': 'ChatGPT Session',
+    'chrome_ai': 'Chrome Browser AI',
+    'openai': 'OpenAI (GPT-4o)',
+    'gemini': 'Google Gemini',
+    'groq': 'Groq',
+    'openrouter': 'OpenRouter',
+    'auto': 'Auto AI'
+  };
+
   /**
-   * Unified AI Generator Dispatcher
+   * Get formatted display label for an AI engine key
+   * @param {string} engineKey
+   * @returns {string}
+   */
+  function getEngineDisplayName(engineKey) {
+    if (!engineKey) return 'AI Engine';
+    return ENGINE_DISPLAY_NAMES[engineKey] || engineKey.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  /**
+   * Unified AI Generator Dispatcher with engine resolution metadata
    * @param {Object} options
    * @param {string} options.prompt
    * @param {string} [options.provider='auto'] - 'auto' | 'chatgpt_web' | 'smart_brain' | 'chrome_ai'
    * @param {string} [options.apiKey]
    * @param {Array<string>} [options.exclusions=[]]
-   * @returns {Promise<string>}
+   * @returns {Promise<{ output: string, engine: string }>}
    */
-  async function generateIdeas(options = {}) {
+  async function generateIdeasWithEngine(options = {}) {
     const prompt = options.prompt || '';
     const provider = options.provider || 'auto';
     const apiKey = options.apiKey || '';
@@ -432,42 +453,67 @@ Please suggest ${count} BRAND NEW, DIFFERENT domain name ideas for "${prompt}".
 
     // 1. Explicit Custom API keys (if provided)
     if (['openai', 'gemini', 'groq', 'openrouter'].includes(provider)) {
-      return await generateWithCustomApi(provider, apiKey, prompt, exclusions);
+      const output = await generateWithCustomApi(provider, apiKey, prompt, exclusions);
+      return { output, engine: provider };
     }
 
     // 2. Explicit Chrome AI
     if (provider === 'chrome_ai') {
-      return await generateWithChromeAi(prompt, exclusions);
+      const output = await generateWithChromeAi(prompt, exclusions);
+      return { output, engine: 'chrome_ai' };
     }
 
     // 3. Explicit ChatGPT Web Session
     if (provider === 'chatgpt_web') {
-      return await generateWithChatGptWeb(prompt, exclusions);
+      const output = await generateWithChatGptWeb(prompt, exclusions);
+      return { output, engine: 'chatgpt_web' };
     }
 
     // 4. Explicit Smart Local Semantic Brain
     if (provider === 'smart_brain') {
       const names = generateWithSmartBrain(prompt, exclusions, 15);
-      return names.map((n, idx) => `${idx + 1}. **${n}**`).join('\n');
+      return {
+        output: names.map((n, idx) => `${idx + 1}. **${n}**`).join('\n'),
+        engine: 'smart_brain'
+      };
     }
 
     // 5. 'auto' mode: tries Chrome AI (on supported Chromium browsers) -> ChatGPT web session -> Smart Local Brain
     try {
       const isFirefox = typeof navigator !== 'undefined' && (/firefox/i.test(navigator.userAgent) || /fxios/i.test(navigator.userAgent));
       if (!isFirefox && typeof window !== 'undefined' && window.ai && window.ai.languageModel) {
-        return await generateWithChromeAi(prompt, exclusions);
+        const output = await generateWithChromeAi(prompt, exclusions);
+        return { output, engine: 'chrome_ai' };
       }
     } catch (e) {
       // Chrome AI not active or failed, continue
     }
 
     try {
-      return await generateWithChatGptWeb(prompt, exclusions);
+      const output = await generateWithChatGptWeb(prompt, exclusions);
+      return { output, engine: 'chatgpt_web' };
     } catch (e) {
       // ChatGPT session not logged in or blocked, use Smart Local Brain
       const names = generateWithSmartBrain(prompt, exclusions, 15);
-      return names.map((n, idx) => `${idx + 1}. **${n}**`).join('\n');
+      return {
+        output: names.map((n, idx) => `${idx + 1}. **${n}**`).join('\n'),
+        engine: 'smart_brain'
+      };
     }
+  }
+
+  /**
+   * Unified AI Generator Dispatcher
+   * @param {Object} options
+   * @param {string} options.prompt
+   * @param {string} [options.provider='auto'] - 'auto' | 'chatgpt_web' | 'smart_brain' | 'chrome_ai'
+   * @param {string} [options.apiKey]
+   * @param {Array<string>} [options.exclusions=[]]
+   * @returns {Promise<string>}
+   */
+  async function generateIdeas(options = {}) {
+    const result = await generateIdeasWithEngine(options);
+    return result.output;
   }
 
   /**
@@ -484,7 +530,7 @@ Please suggest ${count} BRAND NEW, DIFFERENT domain name ideas for "${prompt}".
    * @param {number} [params.maxRounds=3] - Maximum iteration rounds
    * @param {function(Object)} [params.onProgress] - Live progress updates
    * @param {Object} [params.domainCheckerInstance] - Injected DomainChecker instance
-   * @returns {Promise<{ availableDomains: Array<Object>, allResults: Array<Object>, rounds: number, totalChecked: number, prompt: string }>}
+   * @returns {Promise<{ availableDomains: Array<Object>, allResults: Array<Object>, rounds: number, totalChecked: number, availableCount: number, prompt: string, engine: string, engineName: string }>}
    */
   async function huntAvailableDomains(params = {}) {
     const {
@@ -507,6 +553,7 @@ Please suggest ${count} BRAND NEW, DIFFERENT domain name ideas for "${prompt}".
     const evaluatedBaseNames = new Set();
 
     let round = 1;
+    let resolvedEngine = provider === 'auto' ? 'smart_brain' : provider;
 
     while (round <= maxRounds) {
       const currentAvailableCount = Array.from(accumulatedResultsMap.values()).filter(r => r.isAvailable).length;
@@ -531,17 +578,22 @@ Please suggest ${count} BRAND NEW, DIFFERENT domain name ideas for "${prompt}".
       // 1. Generate ideas with exclusions
       let aiRawOutput = '';
       try {
-        aiRawOutput = await generateIdeas({
+        const genResult = await generateIdeasWithEngine({
           prompt,
           provider,
           apiKey,
           exclusions: Array.from(takenBaseNames)
         });
+        aiRawOutput = genResult.output;
+        if (genResult.engine) {
+          resolvedEngine = genResult.engine;
+        }
       } catch (err) {
         // If external provider fails on follow-up round, seamlessly fallback to Smart Brain
         if (provider !== 'smart_brain') {
           const names = generateWithSmartBrain(prompt, takenBaseNames, 15);
           aiRawOutput = names.map((n, idx) => `${idx + 1}. **${n}**`).join('\n');
+          resolvedEngine = 'smart_brain';
         } else {
           throw err;
         }
@@ -627,7 +679,9 @@ Please suggest ${count} BRAND NEW, DIFFERENT domain name ideas for "${prompt}".
       rounds: Math.min(round, maxRounds),
       totalChecked: allResults.length,
       availableCount: availableDomains.length,
-      prompt
+      prompt,
+      engine: resolvedEngine,
+      engineName: getEngineDisplayName(resolvedEngine)
     };
   }
 
@@ -635,6 +689,8 @@ Please suggest ${count} BRAND NEW, DIFFERENT domain name ideas for "${prompt}".
   const AiGenerator = {
     INDUSTRY_DICTIONARY,
     STOP_WORDS,
+    ENGINE_DISPLAY_NAMES,
+    getEngineDisplayName,
     extractKeywords,
     detectCategory,
     generateWithSmartBrain,
@@ -642,6 +698,7 @@ Please suggest ${count} BRAND NEW, DIFFERENT domain name ideas for "${prompt}".
     generateWithChatGptWeb,
     generateWithChromeAi,
     generateWithCustomApi,
+    generateIdeasWithEngine,
     generateIdeas,
     huntAvailableDomains
   };
