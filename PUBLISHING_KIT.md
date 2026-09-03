@@ -89,6 +89,13 @@ Required to query real-time domain availability and aftermarket status via the I
 Used strictly on the client side to remember user preferences (selected TLDs, AI provider choice, API keys) and starred domain bookmarks across browser sessions.
 ```
 
+### Privacy Policy URL Field (Required by Chrome Web Store)
+Add the following publicly accessible link into the **"Privacy policy"** field in the **Privacy** tab of the Chrome Web Store Developer Dashboard:
+```
+https://github.com/nvzard/domain-availability-checker/blob/main/PRIVACY_POLICY.md
+```
+*(Alternative raw URL if needed: `https://raw.githubusercontent.com/nvzard/domain-availability-checker/main/PRIVACY_POLICY.md`)*
+
 ### User Data Collection
 - **Does this extension collect user data?** `No` (Select "I do not collect or use user data").
 - **Account required?** `No`.

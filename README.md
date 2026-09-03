@@ -96,6 +96,12 @@ npm run package
 
 ---
 
+## 🔒 Privacy & Data Protection
+
+Domain Scout AI is 100% client-side and does not collect or track user data. Read our complete [Privacy Policy](PRIVACY_POLICY.md).
+
+---
+
 ## 📄 License
 
 MIT License. See [LICENSE](LICENSE) for details.
