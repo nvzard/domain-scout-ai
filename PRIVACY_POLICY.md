@@ -82,5 +82,5 @@ We may update this Privacy Policy periodically to reflect changes in extension f
 
 If you have questions, feedback, or concerns regarding this Privacy Policy or the practices of Domain Scout AI, please open an issue or reach out via:
 
-* **GitHub Repository:** [https://github.com/nvzard/domain-availability-checker](https://github.com/nvzard/domain-availability-checker)
+* **GitHub Repository:** [https://github.com/nvzard/domain-scout-ai](https://github.com/nvzard/domain-scout-ai)
 * **Developer Contact:** [https://github.com/nvzard](https://github.com/nvzard)
