@@ -79,9 +79,14 @@ Domain Scout does not collect personal data, track browsing history, or require 
 Search and check domain name availability, TLD options, and aftermarket status in real time.
 ```
 
-### Host Permissions Justification (`https://cloud.instantdomainsearch.com/*`, `https://openrouter.ai/*`, `https://*.openai.com/*`, `https://generativelanguage.googleapis.com/*`, `https://api.groq.com/*`)
+### Host Permissions Justification (`https://cloud.instantdomainsearch.com/*`, `https://instantdomainsearch.com/*`, `https://openrouter.ai/*`, `https://*.openai.com/*`, `https://generativelanguage.googleapis.com/*`, `https://api.groq.com/*`)
 ```
 Required to query real-time domain availability and aftermarket status via the InstantDomainSearch API, and to send user-configured naming prompts to AI providers (OpenRouter, OpenAI, Google Gemini, Groq) directly from the client.
+```
+
+### Declarative Net Request Permission Justification (`declarativeNetRequest`)
+```
+Required to modify network request headers for InstantDomainSearch API queries so that fetch requests preserve same-origin metadata required by the registry lookup endpoint.
 ```
 
 ### Storage Permission Justification (`storage`)

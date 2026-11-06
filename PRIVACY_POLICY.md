@@ -45,7 +45,8 @@ Domain Scout AI is designed with a **Privacy-First, Client-Side Architecture**.
 
 Domain Scout AI requests only minimal, strictly necessary browser permissions:
 * `storage`: Required to store your settings, selected TLDs, starred domain shortlist, and API keys locally in your browser.
-* `Host Permissions` (`https://cloud.instantdomainsearch.com/*`, `https://openrouter.ai/*`, `https://*.openai.com/*`, `https://generativelanguage.googleapis.com/*`, `https://api.groq.com/*`): Required exclusively to make direct API requests from the extension popup to perform domain availability checks and fetch AI naming suggestions.
+* `declarativeNetRequest`: Required to ensure domain lookup requests sent to InstantDomainSearch preserve valid request origin metadata without leakage of user data.
+* `Host Permissions` (`https://cloud.instantdomainsearch.com/*`, `https://instantdomainsearch.com/*`, `https://openrouter.ai/*`, `https://*.openai.com/*`, `https://generativelanguage.googleapis.com/*`, `https://api.groq.com/*`): Required exclusively to make direct API requests from the extension popup to perform domain availability checks and fetch AI naming suggestions.
 
 ---
 

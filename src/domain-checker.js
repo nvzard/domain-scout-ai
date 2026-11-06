@@ -249,17 +249,17 @@
     // Strip leading/trailing dots or hyphens
     text = text.replace(/^[-.]+|[-.]+$/g, '');
 
-    // If result has no dot and is longer than 30 chars or shorter than 2 chars, it is not a valid brandable name
+    // If result has no dot and is longer than 63 chars or shorter than 2 chars, it is not a valid brandable name
     if (!text.includes('.')) {
-      if (text.length < 2 || text.length > 30 || SINGLE_NOISE_WORDS.has(text)) {
+      if (text.length < 2 || text.length > 63 || SINGLE_NOISE_WORDS.has(text)) {
         return '';
       }
     }
 
-    // If result has a dot, validate that the base part is <= 30 chars, total length <= 45, and not a solitary noise word
+    // If result has a dot, validate that the base part is <= 63 chars, total length <= 80, and not a solitary noise word
     if (text.includes('.')) {
       const parts = text.split('.');
-      if (parts[0].length < 2 || parts[0].length > 30 || text.length > 45 || SINGLE_NOISE_WORDS.has(parts[0])) {
+      if (parts[0].length < 2 || parts[0].length > 63 || text.length > 80 || SINGLE_NOISE_WORDS.has(parts[0])) {
         return '';
       }
     }
@@ -494,8 +494,8 @@
 
         if (!baseName || !specificTld) continue;
 
-        // Validate baseName and specificTld
-        if (!/^[a-z0-9](?:[a-z0-9-]{0,28}[a-z0-9])?$/i.test(baseName)) continue;
+        // Validate baseName and specificTld (allow standard label length up to 63 chars)
+        if (!/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i.test(baseName)) continue;
         if (!isTld(specificTld)) continue;
         if (SINGLE_NOISE_WORDS.has(baseName.toLowerCase())) continue;
 
@@ -512,8 +512,8 @@
         const baseName = token;
         if (!baseName) continue;
 
-        // Validate baseName format & length (2 to 30 alphanumeric/hyphen chars)
-        if (!/^[a-z0-9](?:[a-z0-9-]{0,28}[a-z0-9])?$/i.test(baseName)) continue;
+        // Validate baseName format & length (1 to 63 alphanumeric/hyphen chars)
+        if (!/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i.test(baseName)) continue;
         if (SINGLE_NOISE_WORDS.has(baseName.toLowerCase())) continue;
 
         if (!grouped.has(baseName)) {
@@ -558,38 +558,61 @@
     if (!batch || batch.length === 0) return [];
 
     const payload = { names: batch };
-    const url = 'https://cloud.instantdomainsearch.com/services/bulk-check';
+    const endpoints = [
+      'https://cloud.instantdomainsearch.com/services/bulk-check',
+      'https://instantdomainsearch.com/services/bulk-check'
+    ];
 
-    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    const timeoutId = controller ? setTimeout(() => controller.abort(), 15000) : null;
+    const headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'sec-fetch-site': 'same-origin',
+      'origin': 'https://instantdomainsearch.com',
+      'referer': 'https://instantdomainsearch.com/'
+    };
+    if (typeof process !== 'undefined' && process.versions && process.versions.node) {
+      headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+    } else if (typeof navigator !== 'undefined' && navigator.userAgent && navigator.userAgent.includes('Node.js')) {
+      headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+    }
 
-    let response;
-    try {
-      response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        signal: controller ? controller.signal : undefined,
-        body: JSON.stringify(payload)
-      });
-    } catch (fetchErr) {
-      if (timeoutId) clearTimeout(timeoutId);
-      if (fetchErr.name === 'AbortError' || fetchErr.message?.includes('aborted')) {
-        throw new Error(`Domain check timed out. Please check your internet connection.`);
+    let lastError = null;
+    for (const url of endpoints) {
+      const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      const timeoutId = controller ? setTimeout(() => controller.abort(), 15000) : null;
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers,
+          signal: controller ? controller.signal : undefined,
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          throw new Error(`API returned HTTP status ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        if (data && Array.isArray(data.results)) {
+          return data.results;
+        }
+      } catch (fetchErr) {
+        lastError = fetchErr;
+        // Continue to fallback endpoint if first fails
+      } finally {
+        if (timeoutId) clearTimeout(timeoutId);
       }
-      throw new Error(`Domain check failed: ${fetchErr.message || 'Network error'}`);
-    } finally {
-      if (timeoutId) clearTimeout(timeoutId);
     }
 
-    if (!response.ok) {
-      throw new Error(`API returned HTTP status ${response.status}: ${response.statusText}`);
+    if (lastError) {
+      if (lastError.name === 'AbortError' || lastError.message?.includes('aborted')) {
+        throw new Error('Domain check timed out. Please check your internet connection.');
+      }
+      throw new Error(`Domain check failed: ${lastError.message || 'Network error'}`);
     }
 
-    const data = await response.json();
-    return (data && Array.isArray(data.results)) ? data.results : [];
+    return [];
   }
 
   /**
@@ -598,15 +621,16 @@
    * @returns {Array<{ domain: string, name: string, tld: string, isAvailable: boolean, isRegistered: boolean, isAftermarket: boolean, marketPrice?: number, marketUrl?: string, raw: Object }>}
    */
   function processResults(rawResults) {
+    const UNREGISTERABLE_STATUSES = new Set(['unavailable', 'blocked', 'reserved', 'registryreserved']);
     return rawResults.map(res => {
       const name = res.label || '';
       const tld = res.tld || '';
       const domain = tld ? `${name}.${tld}` : name;
       const isRegistered = Boolean(res.isRegistered);
-      const registryStatus = res.registryStatus || '';
+      const registryStatus = (res.registryStatus || '').toLowerCase();
       
-      // Matches python script criteria: not registered and registryStatus is not "unavailable"
-      const isAvailable = !isRegistered && registryStatus !== 'unavailable';
+      const isBlockedOrReserved = UNREGISTERABLE_STATUSES.has(registryStatus);
+      const isAvailable = !isRegistered && !isBlockedOrReserved;
 
       // Aftermarket check
       const markets = Array.isArray(res.markets) ? res.markets : [];

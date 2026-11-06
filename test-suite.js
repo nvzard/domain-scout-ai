@@ -675,42 +675,78 @@ async function testBackgroundWorkerAndResultClearing() {
   const BackgroundWorker = require('./src/background.js');
 
   // 1. Start background hunt with mock checker
+  const originalCheckDomains = DomainChecker.checkDomains;
   let checkCallCount = 0;
-  global.DomainChecker.checkDomains = async (text, tlds) => {
-    checkCallCount++;
-    return [{ name: 'domainhunt', tld: 'com', domain: 'domainhunt.com', isAvailable: true, isRegistered: false }];
-  };
+  try {
+    DomainChecker.checkDomains = async (text, tlds) => {
+      checkCallCount++;
+      return [{ name: 'domainhunt', tld: 'com', domain: 'domainhunt.com', isAvailable: true, isRegistered: false }];
+    };
 
-  await BackgroundWorker.startAiHuntBackground({
-    prompt: 'Indie maker tools',
-    defaultTlds: ['com'],
-    provider: 'smart_brain',
-    targetAvailableCount: 1,
-    maxRounds: 1
-  }, 'test_search_1');
+    await BackgroundWorker.startAiHuntBackground({
+      prompt: 'Indie maker tools',
+      defaultTlds: ['com'],
+      provider: 'smart_brain',
+      targetAvailableCount: 1,
+      maxRounds: 1
+    }, 'test_search_1');
 
-  assert.strictEqual(mockStorage.searchState.status, 'completed');
-  assert.strictEqual(mockStorage.lastResults.length, 1);
-  assert.strictEqual(mockStorage.lastResults[0].domain, 'domainhunt.com');
-  assert.strictEqual(mockStorage.lastResults[0].isAvailable, true);
-  assert.ok(mockStorage.lastAiMeta);
-  assert.strictEqual(mockStorage.lastAiMeta.availableCount, 1);
+    assert.strictEqual(mockStorage.searchState.status, 'completed');
+    assert.strictEqual(mockStorage.lastResults.length, 1);
+    assert.strictEqual(mockStorage.lastResults[0].domain, 'domainhunt.com');
+    assert.strictEqual(mockStorage.lastResults[0].isAvailable, true);
+    assert.ok(mockStorage.lastAiMeta);
+    assert.strictEqual(mockStorage.lastAiMeta.availableCount, 1);
 
-  // 2. Test Cancellation
-  await BackgroundWorker.cancelActiveSearch();
-  assert.strictEqual(mockStorage.searchState.status, 'idle');
+    // 2. Test Cancellation
+    await BackgroundWorker.cancelActiveSearch();
+    assert.strictEqual(mockStorage.searchState.status, 'idle');
+  } finally {
+    DomainChecker.checkDomains = originalCheckDomains;
+  }
 
   console.log('✓ Passed Background Worker & Result Clearing tests');
 }
 
-Promise.all([
-  testReiterationLoop(),
-  testOpenRouterParsing(),
-  testCancellation(),
-  testBackgroundWorkerAndResultClearing()
-]).then(() => {
-  console.log('\n🎉 ALL 16 TEST SUITES PASSED SUCCESSFULLY!');
-}).catch(err => {
+// Test 17: Live InstantDomainSearch Availability Validation
+async function testInstantDomainSearchLiveApi() {
+  console.log('\nTest 17: Live InstantDomainSearch API Availability Verification');
+  const unregisteredDomain = `ds-unreg-${Date.now()}-${Math.floor(Math.random() * 100000)}.com`;
+  const inputText = `google.com\napple.com\n${unregisteredDomain}`;
+
+  const results = await DomainChecker.checkDomains(inputText, ['com']);
+  assert.ok(Array.isArray(results), 'Expected results array from checkDomains');
+  assert.strictEqual(results.length, 3, 'Expected 3 domain results');
+
+  const google = results.find(r => r.domain === 'google.com');
+  const apple = results.find(r => r.domain === 'apple.com');
+  const unreg = results.find(r => r.domain === unregisteredDomain);
+
+  assert.ok(google, 'google.com should be in results');
+  assert.strictEqual(google.isRegistered, true, 'google.com should be marked isRegistered: true');
+  assert.strictEqual(google.isAvailable, false, 'google.com should NOT be marked available');
+
+  assert.ok(apple, 'apple.com should be in results');
+  assert.strictEqual(apple.isRegistered, true, 'apple.com should be marked isRegistered: true');
+  assert.strictEqual(apple.isAvailable, false, 'apple.com should NOT be marked available');
+
+  assert.ok(unreg, `${unregisteredDomain} should be in results`);
+  assert.strictEqual(unreg.isRegistered, false, `${unregisteredDomain} should be marked isRegistered: false`);
+  assert.strictEqual(unreg.isAvailable, true, `${unregisteredDomain} should be marked isAvailable: true`);
+
+  console.log('✓ Passed Live InstantDomainSearch API Availability Verification (Registered domains correctly identified as unavailable, unregistered domain correctly identified as available)');
+}
+
+async function runAllAsyncTests() {
+  await testReiterationLoop();
+  await testOpenRouterParsing();
+  await testCancellation();
+  await testBackgroundWorkerAndResultClearing();
+  await testInstantDomainSearchLiveApi();
+  console.log('\n🎉 ALL 17 TEST SUITES PASSED SUCCESSFULLY!');
+}
+
+runAllAsyncTests().catch(err => {
   console.error('\n❌ Test failed:', err);
   process.exit(1);
 });

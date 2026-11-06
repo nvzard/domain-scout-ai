@@ -13,6 +13,42 @@ if (typeof importScripts === 'function') {
   }
 }
 
+// Ensure declarativeNetRequest rules are active for InstantDomainSearch requests
+async function setupNetRequestRules() {
+  const dnr = (typeof chrome !== 'undefined' && chrome.declarativeNetRequest)
+    ? chrome.declarativeNetRequest
+    : (typeof browser !== 'undefined' && browser.declarativeNetRequest ? browser.declarativeNetRequest : null);
+
+  if (dnr && dnr.updateDynamicRules) {
+    try {
+      await dnr.updateDynamicRules({
+        removeRuleIds: [1001],
+        addRules: [
+          {
+            id: 1001,
+            priority: 1,
+            action: {
+              type: 'modifyHeaders',
+              requestHeaders: [
+                { header: 'sec-fetch-site', operation: 'set', value: 'same-origin' },
+                { header: 'origin', operation: 'set', value: 'https://instantdomainsearch.com' },
+                { header: 'referer', operation: 'set', value: 'https://instantdomainsearch.com/' }
+              ]
+            },
+            condition: {
+              urlFilter: '*instantdomainsearch.com/*',
+              resourceTypes: ['xmlhttprequest']
+            }
+          }
+        ]
+      });
+    } catch (e) {
+      console.warn('Domain Scout background: dynamic rules notice:', e);
+    }
+  }
+}
+setupNetRequestRules();
+
 // Storage abstraction
 const storageEngine = (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local)
   ? chrome.storage.local
