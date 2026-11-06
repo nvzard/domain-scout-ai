@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Domain Scout AI - Fast Domain Search",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Instant bulk domain availability checker for .com, .io, .ai and more via InstantDomainSearch.",
   "author": "Zulu",
   "browser_specific_settings": {

@@ -5,6 +5,17 @@ All notable changes to **Domain Scout AI** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-11-06
+
+### 🐛 Fixed
+- **InstantDomainSearch Availability Bug**:
+  - Resolved an issue where all domain queries returned as available due to cross-origin fetch restrictions and missing `Sec-Fetch-Site` header context.
+  - Implemented `declarativeNetRequest` rules to preserve same-origin metadata on InstantDomainSearch lookups.
+  - Added dual-endpoint fallback between `cloud.instantdomainsearch.com` and `instantdomainsearch.com`.
+  - Added detection of registry-blocked and reserved statuses (`blocked`, `reserved`, `registryreserved`).
+  - Expanded domain label length validation up to RFC standard 63 characters.
+  - Added live integration test for end-to-end domain availability verification.
+
 ## [1.2.0] - 2026-09-02
 
 ### 🚀 Added

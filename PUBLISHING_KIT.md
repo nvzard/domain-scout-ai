@@ -7,8 +7,8 @@ This document contains ready-to-copy-paste metadata, descriptions, screenshots g
 ## 📦 Ready-to-Upload Packages
 
 Built packages are located in the `packages/` directory:
-- **Chrome Web Store package:** `packages/domain-scout-chrome-v1.2.0.zip`
-- **Firefox Add-on package:** `packages/domain-scout-firefox-v1.2.0.zip`
+- **Chrome Web Store package:** `packages/domain-scout-chrome-v1.2.1.zip`
+- **Firefox Add-on package:** `packages/domain-scout-firefox-v1.2.1.zip`
 
 ---
 
@@ -128,12 +128,12 @@ All promo assets and screenshots have been generated in [`store-assets/`](file:/
 
 1. **Google Chrome Web Store Dashboard:**
    👉 https://chrome.google.com/webstore/devconsole/
-   - Upload package: `packages/domain-scout-chrome-v1.2.0.zip`
+   - Upload package: `packages/domain-scout-chrome-v1.2.1.zip`
    - Upload screenshots: `store-assets/screenshot-1-search-input.jpg` through `screenshot-5-favorites-export.jpg`
    - Upload promo tiles: `store-assets/promo-small-440x280.png` & `store-assets/promo-marquee-1400x560.png`
 
 2. **Mozilla Firefox Add-on Developer Hub (AMO):**
    👉 https://addons.mozilla.org/developers/
-   - Upload package: `packages/domain-scout-firefox-v1.2.0.zip`
+   - Upload package: `packages/domain-scout-firefox-v1.2.1.zip`
    - Paste the Summary/Description above -> Submit for review.
 
